@@ -1,4 +1,4 @@
-// Generated from java-escape by ANTLR 4.11.1
+// Generated from /home/nhenehan/Source/Workspaces/Netbeans/master/netbeans/rust/rust.grammar/src/org/netbeans/modules/rust/grammar/antlr4/g4/RustParser.g4 by ANTLR 4.13.1
 package org.netbeans.modules.rust.grammar.antlr4;
 
 /*
