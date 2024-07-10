@@ -37,7 +37,7 @@ import org.openide.util.RequestProcessor.Task;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.history.SearchOutgoingAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_SearchOutgoingAction_Name")
+@ActionRegistration(displayName = "#LBL_SearchOutgoingAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_SearchOutgoingAction_Name=Show &Outgoing",
     "LBL_SearchOutgoingAction_PopupName=Show Outgoing",

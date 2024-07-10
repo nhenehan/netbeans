@@ -79,7 +79,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.push.PushAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_PushAction_Name")
+@ActionRegistration(displayName = "#LBL_PushAction_Name", lazy=true)
 @NbBundle.Messages({"#PushAction", "LBL_PushAction_Name=Pus&h..."})
 public class PushAction extends SingleRepositoryAction {
     

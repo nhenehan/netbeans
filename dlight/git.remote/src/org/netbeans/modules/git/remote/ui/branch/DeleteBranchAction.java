@@ -40,7 +40,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.branch.DeleteBranchAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_DeleteBranchAction_Name")
+@ActionRegistration(displayName = "#LBL_DeleteBranchAction_Name", lazy=true)
 public class DeleteBranchAction extends SingleRepositoryAction {
 
     private static final Logger LOG = Logger.getLogger(DeleteBranchAction.class.getName());

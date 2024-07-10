@@ -102,7 +102,7 @@ import org.netbeans.modules.git.remote.ui.repository.Revision;
 import org.netbeans.modules.git.remote.utils.GitUtils;
 import org.netbeans.modules.versioning.core.api.VCSFileProxy;
 import org.netbeans.modules.versioning.util.Utils;
-import org.netbeans.modules.versioning.util.VCSKenaiAccessor.KenaiUser;
+//import org.netbeans.modules.versioning.util.VCSKenaiAccessor;
 import org.netbeans.spi.diff.DiffProvider;
 import org.openide.awt.Actions;
 import org.openide.filesystems.FileObject;
@@ -210,10 +210,10 @@ final class AnnotationBar extends JComponent implements Accessible, PropertyChan
      */
     private VCSFileProxy repositoryRoot;
 
-    /**
-     * Holdes kenai users
-     */
-    private final Map<String, KenaiUser> kenaiUsersMap = null;
+//    /**
+//     * Holdes kenai users
+//     */
+//    private final Map<String, KenaiUser> kenaiUsersMap = null;
 
     /*
      * Holds parent/previous revisions for each line revision
@@ -699,21 +699,22 @@ final class AnnotationBar extends JComponent implements Accessible, PropertyChan
             popupMenu.add(previousAnnotationsMenu);
             previousAnnotationsMenu.setVisible(false);
 
-            if(isKenai() && al != null) {
+            //if(isKenai() && al != null) {
+            if(false && al != null) { //Todo: remove laater. placeholder for memory
                 String author = al.getAuthor().toString();
                 final int lineNr = al.getLineNum();
-                final KenaiUser ku = kenaiUsersMap.get(author);
-                if(ku != null) {
-                    popupMenu.addSeparator();
-                    JMenuItem chatMenu = new JMenuItem(NbBundle.getMessage(AnnotationBar.class, "CTL_MenuItem_Chat", author));
-                    chatMenu.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            ku.startChat(KenaiUser.getChatLink(getCurrentFileObject(), lineNr));
-                        }
-                    });
-                    popupMenu.add(chatMenu);
-                }
+//                final KenaiUser ku = kenaiUsersMap.get(author);
+//                if(ku != null) {
+//                    popupMenu.addSeparator();
+//                    JMenuItem chatMenu = new JMenuItem(NbBundle.getMessage(AnnotationBar.class, "CTL_MenuItem_Chat", author));
+//                    chatMenu.addActionListener(new ActionListener() {
+//                        @Override
+//                        public void actionPerformed(ActionEvent e) {
+//                            ku.startChat(KenaiUser.getChatLink(getCurrentFileObject(), lineNr));
+//                        }
+//                    });
+//                    popupMenu.add(chatMenu);
+//                }
             }
 
             JSeparator separator = new JPopupMenu.Separator();
@@ -744,7 +745,7 @@ final class AnnotationBar extends JComponent implements Accessible, PropertyChan
                     }
                 }, true, null);
             } else if (hasPrevious) {
-                previousRevision = previousRevision.substring(0, 7);
+                previousRevision = (previousRevision != null)?previousRevision.substring(0, 7):""; //Todo: hack
             }
             String format = loc.getString(previousRevision == null ? "CTL_MenuItem_DiffToPrevious" : "CTL_MenuItem_DiffToPrevious.revision"); // NOI18N
             diffMenu.setText(MessageFormat.format(format, previousRevision)); //NOI18N
@@ -1094,7 +1095,8 @@ final class AnnotationBar extends JComponent implements Accessible, PropertyChan
         }
         char[] data = longestString.toCharArray();
         int w = getGraphics().getFontMetrics(component.getFont()).charsWidth(data, 0,  data.length);
-        return w + 4 + (isKenai() ? 18 : 0);
+        //return w + 4 + (isKenai() ? 18 : 0);
+        return w + 4 + (false ? 18 : 0); //Todo: temp change to remember where it came from
     }
 
     @NbBundle.Messages({
@@ -1177,16 +1179,16 @@ final class AnnotationBar extends JComponent implements Accessible, PropertyChan
         g.drawString(annotation, textx, texty);
     }
 
-    boolean isKenai() {
-        return kenaiUsersMap != null && kenaiUsersMap.size() > 0;
-    }
-
-    KenaiUser getKenaiUser(String author) {
-        if(kenaiUsersMap == null) {
-            return null;
-        }
-        return kenaiUsersMap.get(author);
-    }
+//    boolean isKenai() {
+//        return kenaiUsersMap != null && kenaiUsersMap.size() > 0;
+//    }
+//
+//    KenaiUser getKenaiUser(String author) {
+//        if(kenaiUsersMap == null) {
+//            return null;
+//        }
+//        return kenaiUsersMap.get(author);
+//    }
 
     /**
      * Presents commit message as tooltips.

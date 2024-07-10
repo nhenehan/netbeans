@@ -32,7 +32,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.commit.CommitAllAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CommitAllAction_Name")
+@ActionRegistration(displayName = "#LBL_CommitAllAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_CommitAllAction_Name=Commit All - Repository..."
 })

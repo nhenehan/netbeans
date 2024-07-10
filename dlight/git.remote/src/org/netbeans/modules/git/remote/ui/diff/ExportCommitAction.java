@@ -41,7 +41,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.diff.ExportCommitAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_ExportCommitAction_Name")
+@ActionRegistration(displayName = "#LBL_ExportCommitAction_Name", lazy=true)
 public class ExportCommitAction extends SingleRepositoryAction {
 
     @Override

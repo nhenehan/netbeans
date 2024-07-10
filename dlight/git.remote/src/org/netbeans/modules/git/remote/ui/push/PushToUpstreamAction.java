@@ -57,7 +57,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.push.PushToUpstreamAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_PushToUpstreamAction_Name")
+@ActionRegistration(displayName = "#LBL_PushToUpstreamAction_Name", lazy=true)
 @Messages("LBL_PushToUpstreamAction_Name=Pu&sh to Upstream")
 public class PushToUpstreamAction extends MultipleRepositoryAction {
     

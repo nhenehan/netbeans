@@ -45,7 +45,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.checkout.CheckoutPathsAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CheckoutPathsAction_Name")
+@ActionRegistration(displayName = "#LBL_CheckoutPathsAction_Name", lazy=true)
 public class CheckoutPathsAction extends SingleRepositoryAction {
 
     private static final Logger LOG = Logger.getLogger(CheckoutPathsAction.class.getName());

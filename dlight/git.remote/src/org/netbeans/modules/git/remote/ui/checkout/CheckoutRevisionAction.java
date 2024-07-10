@@ -34,7 +34,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.checkout.CheckoutRevisionAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CheckoutRevisionAction_Name")
+@ActionRegistration(displayName = "#LBL_CheckoutRevisionAction_Name", lazy=true)
 public class CheckoutRevisionAction extends AbstractCheckoutAction {
 
     private static final String ICON_RESOURCE = "org/netbeans/modules/git/remote/resources/icons/checkout.png"; //NOI18N

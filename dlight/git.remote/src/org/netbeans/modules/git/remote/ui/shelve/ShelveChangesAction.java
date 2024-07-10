@@ -70,7 +70,7 @@ import org.openide.windows.WindowManager;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.shelve.ShelveChangesAction", category = "GitRemote")
-@ActionRegistration(displayName = "#CTL_ShelveChanges_Title")
+@ActionRegistration(displayName = "#CTL_ShelveChanges_Title", lazy=true)
 @NbBundle.Messages({
     "CTL_ShelveChanges_Title=&Shelve Changes...",
     "LBL_ShelveChangesAction_Name=&Shelve Changes..."

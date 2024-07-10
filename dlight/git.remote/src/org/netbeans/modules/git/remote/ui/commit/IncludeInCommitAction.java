@@ -35,7 +35,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.commit.IncludeInCommitAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_IncludeInCommitAction_Name")
+@ActionRegistration(displayName = "#LBL_IncludeInCommitAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_IncludeInCommitAction_Name=In&clude In Commit"
 })

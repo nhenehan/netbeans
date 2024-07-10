@@ -34,7 +34,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.diff.DiffAllAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_DiffAllAction_Name")
+@ActionRegistration(displayName = "#LBL_DiffAllAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_DiffAllAction_Name=Diff All To HEAD - Repository"
 })

@@ -31,7 +31,7 @@ import org.openide.util.RequestProcessor.Task;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.output.OpenOutputAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_OpenOutputAction_Name")
+@ActionRegistration(displayName = "#LBL_OpenOutputAction_Name", lazy=true)
 public class OpenOutputAction extends MultipleRepositoryAction {
 
     @Override

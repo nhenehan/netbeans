@@ -70,7 +70,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.fetch.PullAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_PullAction_Name")
+@ActionRegistration(displayName = "#LBL_PullAction_Name", lazy=true)
 @NbBundle.Messages({"#PullAction", "LBL_PullAction_Name=P&ull..."})
 public class PullAction extends SingleRepositoryAction {
     

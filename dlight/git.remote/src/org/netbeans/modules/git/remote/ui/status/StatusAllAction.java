@@ -34,7 +34,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.status.StatusAllAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_StatusAllAction_Name")
+@ActionRegistration(displayName = "#LBL_StatusAllAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_StatusAllAction_Name=Show All Changes - Repository"
 })

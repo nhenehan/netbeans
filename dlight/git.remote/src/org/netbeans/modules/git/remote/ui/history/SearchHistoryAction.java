@@ -38,7 +38,7 @@ import org.openide.util.RequestProcessor.Task;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.history.SearchHistoryAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_SearchHistoryAction_Name")
+@ActionRegistration(displayName = "#LBL_SearchHistoryAction_Name", lazy=true)
 public class SearchHistoryAction extends MultipleRepositoryAction {
     private static final String ICON_RESOURCE = "org/netbeans/modules/git/remote/resources/icons/search_history.png"; //NOI18N
 

@@ -36,7 +36,7 @@ import org.openide.util.RequestProcessor.Task;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.conflicts.ResolveConflictsAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_ResolveConflictsAction_Name")
+@ActionRegistration(displayName = "#LBL_ResolveConflictsAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_ResolveConflictsAction_Name=Resolve Con&flicts"
 })

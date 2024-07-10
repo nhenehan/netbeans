@@ -33,7 +33,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.diff.DiffAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_DiffAction_Name")
+@ActionRegistration(displayName = "#LBL_DiffAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_DiffAction_Name=&Diff To HEAD",
     "LBL_DiffAction_PopupName=Diff To HEAD"

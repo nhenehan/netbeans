@@ -42,7 +42,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.reset.ResetAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_ResetAction_Name")
+@ActionRegistration(displayName = "#LBL_ResetAction_Name", lazy=true)
 @NbBundle.Messages("LBL_ResetAction_Name=Re&set...")
 public class ResetAction extends SingleRepositoryAction {
 

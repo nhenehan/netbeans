@@ -58,6 +58,7 @@ import org.netbeans.modules.git.remote.cli.GitException;
 import org.netbeans.modules.git.remote.cli.GitTag;
 import org.netbeans.modules.git.remote.Git;
 import org.netbeans.modules.git.remote.GitModuleConfig;
+import org.netbeans.modules.git.remote.cli.GitUser;
 import org.netbeans.modules.git.remote.client.GitClientExceptionHandler;
 import org.netbeans.modules.git.remote.client.GitProgressSupport;
 import org.netbeans.modules.git.remote.ui.history.SearchHistoryTopComponent.DiffResultsViewFactory;
@@ -66,7 +67,7 @@ import org.netbeans.modules.git.remote.ui.repository.RepositoryInfo;
 import org.netbeans.modules.versioning.core.api.VCSFileProxy;
 import org.netbeans.modules.versioning.history.AbstractSummaryView.SummaryViewMaster.SearchHighlight;
 import org.netbeans.modules.versioning.util.NoContentPanel;
-import org.netbeans.modules.versioning.util.VCSKenaiAccessor;
+//import org.netbeans.modules.versioning.util.VCSKenaiAccessor;
 import org.openide.awt.Mnemonics;
 import org.openide.explorer.ExplorerManager;
 import org.openide.nodes.Node;
@@ -103,7 +104,7 @@ class SearchHistoryPanel extends javax.swing.JPanel implements ExplorerManager.P
     private static final Icon ICON_EXPANDED = UIManager.getIcon("Tree.expandedIcon"); //NOI18N
     
     private int showingResults;
-    private Map<String, VCSKenaiAccessor.KenaiUser> kenaiUserMap;
+    private Map<String, GitUser> gitUserMap;
     private List<GitLogEntry> logEntries;
     private boolean selectFirstRevision;
     private DiffResultsViewFactory diffViewFactory;
@@ -308,7 +309,7 @@ class SearchHistoryPanel extends javax.swing.JPanel implements ExplorerManager.P
             } else {
                 if (tbSummary.isSelected()) {
                     if (summaryView == null) {
-                        summaryView = new SummaryView(this, logEntries = createLogEntries(results), kenaiUserMap);
+                        summaryView = new SummaryView(this, logEntries = createLogEntries(results), gitUserMap);
                     }
                     resultsPanel.add(summaryView.getComponent());
                     summaryView.requestFocusInWindow();
@@ -349,13 +350,13 @@ class SearchHistoryPanel extends javax.swing.JPanel implements ExplorerManager.P
         prevAction.setEnabled(!tbSummary.isSelected() && diffView != null && diffView.isPrevEnabled());
     }
 
-    void setResults (List<RepositoryRevision> newResults, Map<String, VCSKenaiAccessor.KenaiUser> kenaiUserMap, int limit) {
-        setResults(newResults, kenaiUserMap, false, limit);
+    void setResults (List<RepositoryRevision> newResults, Map<String, GitUser> gitUserMap, int limit) {
+        setResults(newResults, gitUserMap, false, limit);
     }
 
-    private void setResults (List<RepositoryRevision> newResults, Map<String, VCSKenaiAccessor.KenaiUser> kenaiUserMap, boolean searching, int limit) {
+    private void setResults (List<RepositoryRevision> newResults, Map<String, GitUser> gitUserMap, boolean searching, int limit) {
         this.results = newResults;
-        this.kenaiUserMap = kenaiUserMap;
+        this.gitUserMap = gitUserMap;
         this.searchInProgress = searching;
         showingResults = limit;
         if (newResults != null && newResults.size() < limit) {
@@ -749,9 +750,9 @@ private void fileInfoCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//
         return showingResults > -1;
     }
     
-    static Map<String, VCSKenaiAccessor.KenaiUser> createKenaiUsersMap (List<RepositoryRevision> results) {
-        // TODO implement kenai support for git
-        return Collections.<String, VCSKenaiAccessor.KenaiUser>emptyMap();
+    static Map<String, GitUser> createGitUsersMap (List<RepositoryRevision> results) {
+        // TODO implement git support for git
+        return Collections.<String, GitUser>emptyMap();
     }
     
     void getMoreRevisions (PropertyChangeListener callback, int count) {
@@ -861,7 +862,7 @@ private void fileInfoCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//
                 GitClientExceptionHandler.notifyException(ex, true);
                 return;
             }
-            final Map<String, VCSKenaiAccessor.KenaiUser> additionalUsersMap = createKenaiUsersMap(newResults);
+            final Map<String, GitUser> additionalUsersMap = createGitUsersMap(newResults);
             if (!isCanceled()) {
                 EventQueue.invokeLater(new Runnable() {
                     @Override
@@ -888,7 +889,7 @@ private void fileInfoCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//
                                 showingResults = -1;
                             }
                             logEntries = createLogEntries(results);
-                            kenaiUserMap.putAll(additionalUsersMap);
+                            gitUserMap.putAll(additionalUsersMap);
                             if (diffView != null) {
                                 diffView.refreshResults(results);
                             }

@@ -48,7 +48,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 @ActionID(id = "org.netbeans.modules.git.remote.ui.blame.AnnotateAction", category = "GitRemote")
-@ActionRegistration(displayName = "#CTL_MenuItem_ShowAnnotations")
+@ActionRegistration(displayName = "#CTL_MenuItem_ShowAnnotations", lazy=true)
 @NbBundle.Messages({
     "CTL_MenuItem_ShowAnnotations=Show A&nnotations"
 })

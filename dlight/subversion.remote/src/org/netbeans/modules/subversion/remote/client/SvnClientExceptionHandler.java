@@ -54,7 +54,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.JButton;
-import org.netbeans.modules.proxy.Base64Encoder;
+import org.netbeans.modules.subversion.remote.Base64Encoder;
 import org.netbeans.modules.subversion.remote.Subversion;
 import org.netbeans.modules.subversion.remote.SvnModuleConfig;
 import org.netbeans.modules.subversion.remote.WorkingCopyAttributesCache;

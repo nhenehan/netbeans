@@ -86,7 +86,7 @@ import org.openide.util.lookup.Lookups;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.commit.CommitAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CommitAction_Name")
+@ActionRegistration(displayName = "#LBL_CommitAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_CommitAction_Name=Co&mmit..."
 })

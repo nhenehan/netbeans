@@ -36,7 +36,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.actions.AddAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_AddAction_Name")
+@ActionRegistration(displayName = "#LBL_AddAction_Name", lazy=true)
 public class AddAction extends SingleRepositoryAction {
     private static final String ICON_RESOURCE = "org/netbeans/modules/git/remote/resources/icons/add.png"; //NOI18N
     

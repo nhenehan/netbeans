@@ -19,6 +19,7 @@
 
 package org.netbeans.modules.subversion.remote.ui.blame;
 
+//import org.netbeans.spi.editor.SideBarFactory; The new one
 import org.netbeans.editor.SideBarFactory;
 
 import javax.swing.*;

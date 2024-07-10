@@ -52,7 +52,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.ignore.UnignoreAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_UnignoreAction_Name")
+@ActionRegistration(displayName = "#LBL_UnignoreAction_Name", lazy=true)
 @NbBundle.Messages("LBL_UnignoreAction_Name=Un&ignore")
 public class UnignoreAction extends MultipleRepositoryAction {
 

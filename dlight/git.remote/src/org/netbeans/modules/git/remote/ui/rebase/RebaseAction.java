@@ -74,7 +74,7 @@ import org.openide.windows.WindowManager;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.rebase.RebaseAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_RebaseAction_Name")
+@ActionRegistration(displayName = "#LBL_RebaseAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_RebaseAction_Name=&Rebase...", "LBL_RebaseAction_PopupName=Rebase..."
 })

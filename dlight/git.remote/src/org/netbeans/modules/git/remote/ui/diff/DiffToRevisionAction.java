@@ -34,7 +34,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.diff.DiffToRevisionAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_DiffToRevisionAction_Name")
+@ActionRegistration(displayName = "#LBL_DiffToRevisionAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_DiffToRevisionAction_Name=Diff &To...",
     "LBL_DiffToRevisionAction_PopupName=Diff To..."

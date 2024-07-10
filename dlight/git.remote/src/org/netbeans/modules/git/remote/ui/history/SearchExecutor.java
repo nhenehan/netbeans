@@ -36,6 +36,7 @@ import org.netbeans.modules.git.remote.cli.GitTag;
 import org.netbeans.modules.git.remote.cli.SearchCriteria;
 import org.netbeans.modules.git.remote.cli.progress.ProgressMonitor;
 import org.netbeans.modules.git.remote.Git;
+import org.netbeans.modules.git.remote.cli.GitUser;
 import org.netbeans.modules.git.remote.client.GitClient;
 import org.netbeans.modules.git.remote.client.GitClientExceptionHandler;
 import org.netbeans.modules.git.remote.client.GitProgressSupport;
@@ -44,7 +45,7 @@ import org.netbeans.modules.git.remote.ui.repository.RepositoryInfo;
 import org.netbeans.modules.git.remote.ui.repository.Revision;
 import org.netbeans.modules.git.remote.utils.GitUtils;
 import org.netbeans.modules.versioning.core.api.VCSFileProxy;
-import org.netbeans.modules.versioning.util.VCSKenaiAccessor;
+//import org.netbeans.modules.versioning.util.VCSKenaiAccessor;
 import org.openide.util.NbBundle;
 
 /**
@@ -234,7 +235,7 @@ class SearchExecutor extends GitProgressSupport {
     }
 
     private void setResults (final List<RepositoryRevision> results) {
-        final Map<String, VCSKenaiAccessor.KenaiUser> kenaiUserMap = SearchHistoryPanel.createKenaiUsersMap(results);
+        final Map<String, GitUser> kenaiUserMap = SearchHistoryPanel.createGitUsersMap(results);
         EventQueue.invokeLater(new Runnable() {
         @Override
             public void run() {

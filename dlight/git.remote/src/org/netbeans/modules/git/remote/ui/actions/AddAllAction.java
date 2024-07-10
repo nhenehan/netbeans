@@ -31,7 +31,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.actions.AddAllAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_AddAllAction_Name")
+@ActionRegistration(displayName = "#LBL_AddAllAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_AddAllAction_Name=Add All - Repository"
 })

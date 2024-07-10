@@ -41,7 +41,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.tag.ManageTagsAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_ManageTagsAction_Name")
+@ActionRegistration(displayName = "#LBL_ManageTagsAction_Name", lazy=true)
 @NbBundle.Messages("LBL_ManageTagsAction_Name=Mana&ge Tags...")
 public class ManageTagsAction extends SingleRepositoryAction {
 

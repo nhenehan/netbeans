@@ -41,7 +41,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.status.StatusAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_StatusAction_Name")
+@ActionRegistration(displayName = "#LBL_StatusAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_StatusAction_Name=Sho&w Changes"
 })

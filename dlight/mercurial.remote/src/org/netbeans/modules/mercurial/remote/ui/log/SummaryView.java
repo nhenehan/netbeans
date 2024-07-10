@@ -307,7 +307,7 @@ final class SummaryView extends AbstractSummaryView implements DiffSetupSource {
     }
     
     public SummaryView (SearchHistoryPanel master, List<? extends LogEntry> results) {
-        super(createViewSummaryMaster(master), results, null);
+        super(createViewSummaryMaster(master), results);
         this.master = master;
     }
 

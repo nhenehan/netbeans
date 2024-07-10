@@ -42,7 +42,7 @@ import org.openide.nodes.Node;
 import org.openide.awt.StatusDisplayer;
 import java.util.*;
 import java.util.List;
-import org.netbeans.modules.proxy.Base64Encoder;
+import org.netbeans.modules.subversion.remote.Base64Encoder;
 import org.netbeans.modules.subversion.remote.FileInformation;
 import org.netbeans.modules.subversion.remote.Subversion;
 import org.netbeans.modules.subversion.remote.SvnModuleConfig;

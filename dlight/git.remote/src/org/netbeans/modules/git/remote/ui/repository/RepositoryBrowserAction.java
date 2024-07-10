@@ -35,7 +35,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.repository.RepositoryBrowserAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_RepositoryBrowserAction_Name")
+@ActionRegistration(displayName = "#LBL_RepositoryBrowserAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_RepositoryBrowserAction_Name=Repositor&y Browser",
     "LBL_RepositoryBrowserAction_PopupName=Repository Browser"

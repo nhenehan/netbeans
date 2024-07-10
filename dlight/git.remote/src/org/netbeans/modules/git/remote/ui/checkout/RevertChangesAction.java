@@ -46,7 +46,7 @@ import org.openide.util.NbBundle;
  */
 // XXX create tests for all possible revert settings
 @ActionID(id = "org.netbeans.modules.git.remote.ui.checkout.RevertChangesAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_RevertChangesAction_Name")
+@ActionRegistration(displayName = "#LBL_RevertChangesAction_Name", lazy=true)
 @NbBundle.Messages("LBL_RevertChangesAction_Name=&Revert Modifications...")
 public class RevertChangesAction extends SingleRepositoryAction {
 

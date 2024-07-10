@@ -35,7 +35,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.commit.ExcludeFromCommitAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_ExcludeFromCommitAction_Name")
+@ActionRegistration(displayName = "#LBL_ExcludeFromCommitAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_ExcludeFromCommitAction_Name=Ex&clude From Commit"
 })

@@ -43,7 +43,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.checkout.SwitchBranchAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_SwitchBranchAction_Name")
+@ActionRegistration(displayName = "#LBL_SwitchBranchAction_Name", lazy=true)
 public class SwitchBranchAction extends AbstractCheckoutAction {
 
     @Override

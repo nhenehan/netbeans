@@ -46,7 +46,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.stash.SaveStashAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_SaveStashAction_Name")
+@ActionRegistration(displayName = "#LBL_SaveStashAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_SaveStashAction_Name=&Stash Changes",
     "LBL_SaveStashAction_PopupName=Stash Changes",

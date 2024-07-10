@@ -37,7 +37,7 @@ import org.netbeans.modules.turbo.TurboProvider;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.netbeans.modules.proxy.Base64Encoder;
+//import org.netbeans.modules.proxy.Base64Encoder;
 import org.netbeans.modules.remotefs.versioning.turbo.CacheIndex;
 import org.netbeans.modules.subversion.remote.util.SvnUtils;
 import org.netbeans.modules.remotefs.versioning.api.VCSFileProxySupport;

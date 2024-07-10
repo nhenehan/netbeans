@@ -43,7 +43,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.fetch.PullFromUpstreamAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_PullFromUpstreamAction_Name")
+@ActionRegistration(displayName = "#LBL_PullFromUpstreamAction_Name", lazy=true)
 @Messages("LBL_PullFromUpstreamAction_Name=&Pull from Upstream")
 public class PullFromUpstreamAction extends MultipleRepositoryAction {
 

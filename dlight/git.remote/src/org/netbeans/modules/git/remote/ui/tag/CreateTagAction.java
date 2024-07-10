@@ -42,7 +42,7 @@ import org.openide.util.NbBundle;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.tag.CreateTagAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CreateTagAction_Name")
+@ActionRegistration(displayName = "#LBL_CreateTagAction_Name", lazy=true)
 @NbBundle.Messages("LBL_CreateTagAction_Name=Crea&te Tag...")
 public class CreateTagAction extends SingleRepositoryAction {
 

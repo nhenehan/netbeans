@@ -36,7 +36,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.diff.DiffCurrentToTrackedAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_DiffCurrentToTrackedAction_Name")
+@ActionRegistration(displayName = "#LBL_DiffCurrentToTrackedAction_Name", lazy=true)
 @NbBundle.Messages({
     "LBL_DiffCurrentToTrackedAction_Name=Diff To T&racked",
     "LBL_DiffCurrentToTrackedAction_PopupName=Diff To Tracked"

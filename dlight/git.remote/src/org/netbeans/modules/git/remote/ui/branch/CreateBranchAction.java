@@ -44,7 +44,7 @@ import org.openide.util.actions.SystemAction;
  *
  */
 @ActionID(id = "org.netbeans.modules.git.remote.ui.branch.CreateBranchAction", category = "GitRemote")
-@ActionRegistration(displayName = "#LBL_CreateBranchAction_Name")
+@ActionRegistration(displayName = "#LBL_CreateBranchAction_Name", lazy=true)
 @NbBundle.Messages("LBL_CreateBranchAction_Name=Create &Branch...")
 public class CreateBranchAction extends SingleRepositoryAction {
 
