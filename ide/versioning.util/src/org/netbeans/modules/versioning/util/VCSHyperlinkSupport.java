@@ -37,8 +37,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import javax.swing.text.Style;
 import javax.swing.text.StyledDocument;
-import org.openide.util.Exceptions;
-import org.openide.util.NbBundle;
 
 /**
  * Implementation provides hyperlink support for VCS anotation bar and history views
@@ -262,87 +260,6 @@ public class VCSHyperlinkSupport {
             for (int i = 0; i < length; i++) {
                 sd.setCharacterAttributes(sd.getLength() - text.length() + start[i], end[i] - start[i], issueHyperlinkStyle, false);
             }
-        }
-    }
-
-    public static class AuthorLinker extends StyledDocumentHyperlink {
-        private static final String AUTHOR_ICON_STYLE   = "authorIconStyle";    // NOI18N
-
-        private Rectangle bounds;
-        private final int docstart;
-        private final int docend;
-        private final String author;
-        private final Style authorStyle;
-
-        public AuthorLinker(Style authorStyle, StyledDocument sd, String author) throws BadLocationException {
-            this(authorStyle, sd, author, null);
-        }
-
-        public AuthorLinker(Style authorStyle, StyledDocument sd, String author, String insertToChat) throws BadLocationException {
-            this.author = author;
-            this.authorStyle = authorStyle;
-
-            int doclen = sd.getLength();
-            int textlen = author.length();
-
-            docstart = doclen;
-            docend = doclen + textlen;
-        }
-
-        @Override
-        public void computeBounds(JTextPane textPane) {
-            computeBounds(textPane, null);
-        }
-        
-        public void computeBounds(JTextPane textPane, BoundsTranslator translator) {
-            Rectangle tpBounds = textPane.getBounds();
-            TextUI tui = textPane.getUI();
-            this.bounds = new Rectangle();
-            try {
-                Rectangle startr = tui.modelToView(textPane, docstart, Position.Bias.Forward).getBounds();
-                Rectangle endr = tui.modelToView(textPane, docend, Position.Bias.Backward).getBounds();
-                this.bounds = new Rectangle(tpBounds.x + startr.x, startr.y, endr.x - startr.x, startr.height);
-                
-                if (null != translator) {
-                    translator.correctTranslation(textPane, this.bounds);
-                }
-            } catch (BadLocationException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
-
-        @Override
-        public boolean mouseClicked(Point p) {
-            if (bounds != null && bounds.contains(p)) {
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public boolean mouseMoved(Point p, JComponent component) {
-            if (bounds != null && bounds.contains(p)) {
-                component.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                component.setToolTipText(NbBundle.getMessage(VCSHyperlinkSupport.class, "LBL_StartChat", author));
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public void insertString(StyledDocument sd, Style style) throws BadLocationException {
-            if(style == null) {
-                style = authorStyle;
-            }
-            sd.insertString(sd.getLength(), author, style);
-
-            String iconStyleName = AUTHOR_ICON_STYLE + author;
-            Style iconStyle = sd.getStyle(iconStyleName);
-            if(iconStyle == null) {
-                iconStyle = sd.addStyle(iconStyleName, null);
-            }
-            sd.insertString(sd.getLength(), " ", style); //NOI18N
-            sd.insertString(sd.getLength(), " ", iconStyle); //NOI18N
         }
     }
 

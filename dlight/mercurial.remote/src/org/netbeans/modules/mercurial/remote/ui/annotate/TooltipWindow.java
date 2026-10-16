@@ -62,7 +62,6 @@ import org.netbeans.modules.versioning.util.VCSHyperlinkSupport;
 import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.IssueLinker;
 import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.StyledDocumentHyperlink;
 import org.netbeans.modules.versioning.util.VCSHyperlinkProvider;
-import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.AuthorLinker;
 import org.openide.util.Exceptions;
 
 /**
@@ -250,9 +249,6 @@ class TooltipWindow implements AWTEventListener, MouseMotionListener, MouseListe
                 StyleConstants.setForeground(hyperlinkStyle, LINK_COLOR == null ? Color.BLUE : LINK_COLOR);
                 StyleConstants.setUnderline(hyperlinkStyle, true);
 
-                Style authorStyle = textPane.addStyle("author", normalStyle); //NOI18N
-                StyleConstants.setForeground(authorStyle, LINK_COLOR == null ? Color.BLUE : LINK_COLOR);
-
                 // revision
                 {
                     String revisionNumber = annotateLine.getRevision();
@@ -264,15 +260,8 @@ class TooltipWindow implements AWTEventListener, MouseMotionListener, MouseListe
                 }
 
                 // author
-                {
-                    String author = annotateLine.getAuthor();
-                    StyledDocumentHyperlink l = linkerSupport.getLinker(AuthorLinker.class, 0);
-                    if (l != null) {
-                        l.insertString(doc, authorStyle);
-                    } else {
-                        doc.insertString(doc.getLength(), author, normalStyle);
-                    }
-                }
+                String author = annotateLine.getAuthor();
+                doc.insertString(doc.getLength(), author, normalStyle);
 
                 // date
                 doc.insertString(doc.getLength(), " ", normalStyle); //NOI18N

@@ -61,10 +61,8 @@ import org.netbeans.modules.git.remote.ui.history.SearchHistoryAction;
 import org.netbeans.modules.versioning.core.api.VCSFileProxy;
 import org.netbeans.modules.versioning.util.VCSHyperlinkProvider;
 import org.netbeans.modules.versioning.util.VCSHyperlinkSupport;
-import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.AuthorLinker;
 import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.IssueLinker;
 import org.netbeans.modules.versioning.util.VCSHyperlinkSupport.StyledDocumentHyperlink;
-//import org.netbeans.modules.versioning.util.VCSKenaiAccessor.KenaiUser;
 import org.openide.util.Exceptions;
 
 /**
@@ -251,9 +249,6 @@ class TooltipWindow implements AWTEventListener, MouseMotionListener, MouseListe
                 StyleConstants.setForeground(hyperlinkStyle, LINK_COLOR == null ? Color.BLUE : LINK_COLOR);
                 StyleConstants.setUnderline(hyperlinkStyle, true);
 
-                Style authorStyle = textPane.addStyle("author", normalStyle); //NOI18N
-                StyleConstants.setForeground(authorStyle, LINK_COLOR == null ? Color.BLUE : LINK_COLOR);
-
                 // revision
                 {
                     String revision = annotateLine.getRevisionInfo().getRevision().substring(0, 7);
@@ -264,30 +259,8 @@ class TooltipWindow implements AWTEventListener, MouseMotionListener, MouseListe
                 }
 
                 // author
-                {
-                    String author = annotateLine.getAuthor().toString();
-                    StyledDocumentHyperlink l = linkerSupport.getLinker(AuthorLinker.class, 0);
-                    //Todo: full delete later when sure
-//                    if (master.isKenai()) {
-//                        KenaiUser kenaiUser = master.getKenaiUser(author);
-//                        if (kenaiUser != null) {
-//                            l = new AuthorLinker(
-//                                    kenaiUser,
-//                                    authorStyle,
-//                                    doc,
-//                                    author,
-//                                    KenaiUser.getChatLink(
-//                                    master.getCurrentFileObject(),
-//                                    annotateLine.getLineNum()));
-//                            linkerSupport.add(l, 0);
-//                        }
-//                    }
-                    if (l != null) {
-                        l.insertString(doc, authorStyle);
-                    } else {
-                        doc.insertString(doc.getLength(), author, normalStyle);
-                    }
-                }
+                String author = annotateLine.getAuthor().toString();
+                doc.insertString(doc.getLength(), author, normalStyle);
                 // date
                 doc.insertString(doc.getLength(), " ", normalStyle);
                 doc.insertString(doc.getLength(), DateFormat.getDateInstance().format(new Date(annotateLine.getRevisionInfo().getCommitTime())), normalStyle);
