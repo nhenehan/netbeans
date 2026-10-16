@@ -27,7 +27,7 @@ import org.openide.util.NbBundle;
 })
 @MIMEResolver.Registration(
     displayName = "#LBL_MESON_BUILD_MIME_RESOLVER",
-    position = 139, // anything > 140 causes meson_options.txt to not be recognized
+    position = 136, // must be <= 140 for meson_options.txt; 137 is java form, 138-140 are cnd.utils resolvers
     resource = "../../resources/mime_resolver.xml"
 )
 public class MIMETypes {
