@@ -51,9 +51,12 @@ import org.netbeans.modules.cnd.makeproject.api.ui.wizard.ProjectWizardPanels.Na
 import org.netbeans.modules.cnd.makeproject.api.ui.wizard.WizardConstants;
 import org.netbeans.modules.cnd.makeproject.spi.DatabaseProjectProvider;
 import org.netbeans.modules.cnd.utils.CndLanguageStandards;
+import org.netbeans.modules.cnd.utils.CndUtils;
 import org.netbeans.modules.cnd.utils.FSPath;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironmentFactory;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.WizardDescriptor;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Lookup;
@@ -345,11 +348,15 @@ public class NewMakeProjectWizardIterator implements WizardDescriptor.ProgressIn
             IteratorExtension extension = Lookup.getDefault().lookup(IteratorExtension.class);
             if (extension != null) {
                 resultSet.addAll(extension.createProject(wiz));
+            } else {
+                notifyServiceNotAvailable();
             }
         } else if (wizardtype == TYPE_MAKEFILE) { // thp
             IteratorExtension extension = Lookup.getDefault().lookup(IteratorExtension.class);
             if (extension != null) {
                 resultSet.addAll(extension.createProject(wiz));
+            } else {
+                notifyServiceNotAvailable();
             }
         } else if (wizardtype == TYPE_BINARY) {
             IteratorExtension extension = Lookup.getDefault().lookup(IteratorExtension.class);
@@ -360,6 +367,8 @@ public class NewMakeProjectWizardIterator implements WizardDescriptor.ProgressIn
                 }
                 extension.discoverProject(wiz.getProperties(), null, kind);
                 //resultSet.addAll(extension.createProject(wiz));
+            } else {
+                notifyServiceNotAvailable();
             }
 //            String binary = WizardConstants.PROPERTY_BUILD_RESULT.get(wiz);
 //            boolean trueSourceRoot = WizardConstants.PROPERTY_TRUE_SOURCE_ROOT.get(wiz);
@@ -644,5 +653,14 @@ public class NewMakeProjectWizardIterator implements WizardDescriptor.ProgressIn
             bundle = NbBundle.getBundle(NewMakeProjectWizardIterator.class);
         }
         return bundle.getString(s);
+    }
+
+    private static void notifyServiceNotAvailable() {
+        String message = NbBundle.getMessage(NewMakeProjectWizardIterator.class, "SERVICE_NOT_AVALIABLE"); // NOI18N
+        if (CndUtils.isStandalone() || CndUtils.isUnitTestMode()) {
+            LOGGER.log(Level.SEVERE, message);
+        } else {
+            DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(message, NotifyDescriptor.ERROR_MESSAGE));
+        }
     }
 }
