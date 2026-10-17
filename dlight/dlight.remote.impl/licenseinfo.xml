@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<licenseinfo>
+    <fileset>
+        <file>tools/fs_server/Makefile</file>
+        <file>tools/fs_server/make/line</file>
+        <file>tools/fs_server/make/Makefile.gmake</file>
+        <file>tools/fs_server/make/Makefile.make</file>
+        <file>tools/fs_server/nbproject/configurations.xml</file>
+        <file>tools/fs_server/nbproject/launcher.properties</file>
+        <file>tools/fs_server/nbproject/project.xml</file>
+        <file>tools/fs_server/src/array.c</file>
+        <file>tools/fs_server/src/array.h</file>
+        <file>tools/fs_server/src/blocking_queue.c</file>
+        <file>tools/fs_server/src/blocking_queue.h</file>
+        <file>tools/fs_server/src/dirtab.c</file>
+        <file>tools/fs_server/src/dirtab.h</file>
+        <file>tools/fs_server/src/exitcodes.h</file>
+        <file>tools/fs_server/src/fs_common.h</file>
+        <file>tools/fs_server/src/fs_server.c</file>
+        <file>tools/fs_server/src/fs_server.h</file>
+        <file>tools/fs_server/src/queue.c</file>
+        <file>tools/fs_server/src/queue.h</file>
+        <file>tools/fs_server/src/settings.c</file>
+        <file>tools/fs_server/src/settings.h</file>
+        <file>tools/fs_server/src/util.c</file>
+        <file>tools/fs_server/src/util.h</file>
+        <file>tools/fs_server/test/dynamic_fs_server_test.sh</file>
+        <file>tools/fs_server/test/Makefile</file>
+        <file>tools/fs_server/test/make_fs_server_requests.sh</file>
+        <file>tools/fs_server/test/test_main.c</file>
+        <file>tools/fs_server/todo.txt</file>
+        <license ref="CDDL-GPL-2-CP" />
+        <comment type="CATEGORY_B">Original C fs_server from NetBeans donations 4 and 5, kept as the
+            reference implementation for tools/fs_server_rs (differential test); not built by default.
+            The C binaries shipped with the IDE come from external/fs_server-1.0.zip.</comment>
+    </fileset>
+</licenseinfo>
