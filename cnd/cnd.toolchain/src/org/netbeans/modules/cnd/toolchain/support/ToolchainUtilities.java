@@ -23,11 +23,13 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import org.netbeans.modules.cnd.toolchain.compilerset.CompilerSetImpl;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.netbeans.modules.cnd.api.remote.HostInfoProvider;
@@ -49,7 +51,6 @@ import org.netbeans.modules.nativeexecution.api.util.HostInfoUtils;
 import org.netbeans.modules.nativeexecution.api.util.MacroExpanderFactory;
 import org.openide.util.Exceptions;
 import org.openide.util.Pair;
-import org.openide.util.WeakSet;
 
 /**
  *
@@ -60,7 +61,7 @@ public final class ToolchainUtilities {
     private ToolchainUtilities() {
     }
    
-    private static final Set<ChangeListener> codeAssistanceChanged = new WeakSet<ChangeListener>();
+    private static final Set<ChangeListener> codeAssistanceChanged = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static void addCodeAssistanceChangeListener(ChangeListener l) {
         synchronized (codeAssistanceChanged) {

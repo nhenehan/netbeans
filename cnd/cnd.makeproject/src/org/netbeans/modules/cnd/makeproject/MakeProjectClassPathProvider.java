@@ -20,6 +20,7 @@ package org.netbeans.modules.cnd.makeproject;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
@@ -30,7 +31,6 @@ import org.netbeans.api.project.Project;
 import org.netbeans.modules.cnd.makeproject.api.MakeProject;
 import org.netbeans.spi.java.classpath.ClassPathProvider;
 import org.openide.filesystems.FileObject;
-import org.openide.util.WeakSet;
 
 /**
  * Provides ClassPath for CND projects related files. See Bug #215926 for more
@@ -45,7 +45,7 @@ import org.openide.util.WeakSet;
 public class MakeProjectClassPathProvider implements ClassPathProvider {
     private static final Logger LOG = Logger.getLogger(MakeProjectClassPathProvider.class.getName());
 
-    private static final Set<ClassPath> PROJECT_CPS = new WeakSet<>();
+    private static final Set<ClassPath> PROJECT_CPS = Collections.newSetFromMap(new WeakHashMap<>());
     private static final ReadWriteLock PROJECT_LOCK = new ReentrantReadWriteLock();
 
     public static void addProjectCP(final ClassPath[] cp) {

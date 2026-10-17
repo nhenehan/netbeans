@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
@@ -59,7 +61,6 @@ import org.openide.filesystems.FileRenameEvent;
 import org.openide.filesystems.FileSystem;
 import org.openide.util.CharSequences;
 import org.openide.util.NbBundle;
-import org.openide.util.WeakSet;
 
 public class Folder implements FileChangeListener, ChangeListener {
 
@@ -87,7 +88,7 @@ public class Folder implements FileChangeListener, ChangeListener {
     private final ArrayList<Object> items; // Folder or Item
     private final ReentrantReadWriteLock itemsLock = new ReentrantReadWriteLock();
     private HashMap<String, HashMap<Configuration, DeletedConfiguration>> deletedItems;
-    private final Set<ChangeListener> changeListenerList = new WeakSet<>(1);
+    private final Set<ChangeListener> changeListenerList = Collections.newSetFromMap(new WeakHashMap<>(1));
     private final boolean projectFiles;
     private String id = null;
     private String root;

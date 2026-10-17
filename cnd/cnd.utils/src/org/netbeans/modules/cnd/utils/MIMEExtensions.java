@@ -30,6 +30,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.prefs.Preferences;
 import javax.swing.event.ChangeEvent;
@@ -46,7 +47,6 @@ import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
-import org.openide.util.WeakSet;
 
 
 /**
@@ -62,7 +62,7 @@ public final class MIMEExtensions {
     private final static Preferences preferences = NbPreferences.forModule(MIMEExtensions.class);
     private final static Manager manager = new Manager();
     private final ReentrantReadWriteLock listenersLock = new ReentrantReadWriteLock();
-    private final WeakSet<ChangeListener> listeners = new WeakSet<ChangeListener>();
+    private final Set<ChangeListener> listeners = Collections.newSetFromMap(new WeakHashMap<>());
 
     @MIMEResolver.Registration(displayName="#CExtResolver", position=214, resource="resources/mime-resolver-ext-based-c.xml", // NOI18N
         showInFileChooser={"#FILECHOOSER_C_SOURCES_FILEFILTER"}) // NOI18N

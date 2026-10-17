@@ -18,15 +18,16 @@
  */
 package org.netbeans.modules.cnd.toolchain.support;
 
+import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
 import javax.swing.event.ChangeListener;
-import org.openide.util.WeakSet;
 
 /**
  *
  */
 public abstract class ToolchainChangeSupport {
-    protected final static Set<ChangeListener> listenerModified = new WeakSet<ChangeListener>();
+    protected final static Set<ChangeListener> listenerModified = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static void addCompilerSetModifiedListener(ChangeListener l) {
         synchronized (listenerModified) {

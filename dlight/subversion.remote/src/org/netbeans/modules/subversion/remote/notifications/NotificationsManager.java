@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTextPane;
@@ -44,7 +45,6 @@ import org.netbeans.modules.subversion.remote.versioning.util.VCSNotificationDis
 import org.netbeans.modules.versioning.core.api.VCSFileProxy;
 import org.openide.util.NbBundle;
 import org.openide.util.RequestProcessor;
-import org.openide.util.WeakSet;
 
 /**
  * Notifies about external changes on the given files.
@@ -54,7 +54,7 @@ public class NotificationsManager {
 
     private static NotificationsManager instance;
     private static final Logger LOG = Logger.getLogger(NotificationsManager.class.getName());
-    private static final Set<VCSFileProxy> alreadySeen = Collections.synchronizedSet(new WeakSet<VCSFileProxy>());
+    private static final Set<VCSFileProxy> alreadySeen = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
     private static final String CMD_DIFF = "cmd.diff";                  //NOI18N
 
     private final HashSet<VCSFileProxy> files;

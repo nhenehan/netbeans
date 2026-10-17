@@ -30,10 +30,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -71,7 +73,6 @@ import org.openide.util.Mutex;
 import org.openide.util.Mutex.Action;
 import org.openide.util.RequestProcessor;
 import org.openide.util.UserQuestionException;
-import org.openide.util.WeakSet;
 import org.openide.xml.XMLUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -139,7 +140,7 @@ public final class MakeProjectHelperImpl implements MakeProjectHelper {
     /** Listener to XML files; needs to be held as an instance field so it is not GC'd */
     private final FileChangeListener fileListener;
     /** Atomic actions in use to save XML files. */
-    private final Set<AtomicAction> saveActions = new WeakSet<>();
+    private final Set<AtomicAction> saveActions = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static MakeProjectHelperImpl create(FileObject dir, Document projectXml, ProjectState state, MakeProjectTypeImpl type) {
         return new MakeProjectHelperImpl(dir, projectXml, state, type);

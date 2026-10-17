@@ -24,8 +24,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Future;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -43,7 +45,6 @@ import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.NbBundle;
 import org.openide.util.RequestProcessor;
-import org.openide.util.WeakSet;
 import org.openide.windows.WindowManager;
 
 /**
@@ -63,7 +64,7 @@ public class ToolsPanelSupport extends ToolchainChangeSupport {
         return cacheManager;
     }
 
-    private static final Set<ChangeListener> listenerChanged = new WeakSet<ChangeListener>();
+    private static final Set<ChangeListener> listenerChanged = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static void addCompilerSetChangeListener(ChangeListener l) {
         synchronized (listenerChanged) {
@@ -100,7 +101,7 @@ public class ToolsPanelSupport extends ToolchainChangeSupport {
         return currentCompilerSet;
     }
 
-    private static final Set<IsChangedListener> listenerIsChanged = new WeakSet<IsChangedListener>();
+    private static final Set<IsChangedListener> listenerIsChanged = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static void addIsChangedListener(IsChangedListener l) {
         synchronized (listenerIsChanged) {

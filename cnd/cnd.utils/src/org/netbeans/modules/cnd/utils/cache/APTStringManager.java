@@ -19,12 +19,13 @@
 
 package org.netbeans.modules.cnd.utils.cache;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import org.netbeans.modules.cnd.debug.CndTraceFlags;
 import org.netbeans.modules.cnd.utils.CndUtils;
-import org.openide.util.WeakSet;
 
 
 /**
@@ -92,14 +93,15 @@ public abstract class APTStringManager  {
     }  
 
     /*package*/ static final class APTSingleStringManager extends APTStringManager {
-        private final WeakSet<CharSequence> storage;
+        /** interned strings: each key maps to a weak reference to itself */
+        private WeakHashMap<CharSequence, WeakReference<CharSequence>> storage;
         private final int initialCapacity;
         // To gebug
         private final String name;
 
         /** Creates a new instance of APTStringManager */
         private APTSingleStringManager(String name, int initialCapacity) {
-            storage = new WeakSet<CharSequence>(initialCapacity);
+            storage = new WeakHashMap<>(initialCapacity);
             this.initialCapacity = initialCapacity;
             // To gebug
             this.name = name;
@@ -124,7 +126,12 @@ public abstract class APTStringManager  {
             CharSequence outText = null;
 
             synchronized (lock) {
-                outText = storage.putIfAbsent(text);
+                WeakReference<CharSequence> ref = storage.get(text);
+                outText = (ref == null) ? null : ref.get();
+                if (outText == null) {
+                    storage.put(text, new WeakReference<>(text));
+                    outText = text;
+                }
             }
             assert (outText != null);
             assert (outText.equals(text));
@@ -136,7 +143,7 @@ public abstract class APTStringManager  {
             if (CndTraceFlags.TRACE_SLICE_DISTIBUTIONS){
                 Object[] arr;
                 synchronized (lock) {
-                    arr = storage.toArray();
+                    arr = storage.keySet().toArray();
                 }
                 System.out.println("Dispose cache "+name+" "+arr.length + " " + getClass().getName()); // NOI18N
                 Map<Class, Integer> classes = new HashMap<Class,Integer>();
@@ -155,9 +162,11 @@ public abstract class APTStringManager  {
                     System.out.println("   "+e.getValue()+" of "+e.getKey().getName()); // NOI18N
                 }
             }
-            if (storage.size() > 0) {
-                storage.clear();
-                storage.resize(initialCapacity);
+            synchronized (lock) {
+                if (!storage.isEmpty()) {
+                    // a fresh map also gives back the memory of the grown table
+                    storage = new WeakHashMap<>(initialCapacity);
+                }
             }
         }
     }

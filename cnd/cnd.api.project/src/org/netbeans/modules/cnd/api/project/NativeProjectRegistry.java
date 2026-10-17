@@ -23,13 +23,14 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.openide.util.WeakSet;
 
 /**
  *
@@ -48,7 +49,7 @@ public final class NativeProjectRegistry {
 
     private final Set<NativeProject> projects = new HashSet<>();
     private final ReentrantReadWriteLock projectsLock = new ReentrantReadWriteLock();
-    private final Set<PropertyChangeListener> listeners = new WeakSet<>();
+    private final Set<PropertyChangeListener> listeners = Collections.newSetFromMap(new WeakHashMap<>());
     private final ReentrantReadWriteLock listenersLock = new ReentrantReadWriteLock();
 
     private NativeProjectRegistry() {

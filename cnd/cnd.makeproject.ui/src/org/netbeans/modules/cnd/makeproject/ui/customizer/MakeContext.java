@@ -19,7 +19,9 @@
 
 package org.netbeans.modules.cnd.makeproject.ui.customizer;
 
+import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
 import javax.swing.JPanel;
 import org.netbeans.api.project.Project;
 import org.netbeans.modules.cnd.api.toolchain.CompilerSet;
@@ -30,7 +32,6 @@ import org.netbeans.modules.cnd.makeproject.api.configurations.Folder;
 import org.netbeans.modules.cnd.makeproject.api.configurations.ItemConfiguration;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfiguration;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
-import org.openide.util.WeakSet;
 
 /**
  *
@@ -55,7 +56,7 @@ public class MakeContext {
     private Folder[] folders;
     private JPanel container;
     private ConfigurationDescriptor configurationDescriptor;
-    private final Set<Savable> listeners = new WeakSet<>();
+    private final Set<Savable> listeners = Collections.newSetFromMap(new WeakHashMap<>());
 
     public MakeContext(Kind kind, Project project, ExecutionEnvironment env, Configuration[] selectedConfigurations){
         this.project = project;

@@ -23,10 +23,12 @@ import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 import org.netbeans.modules.cnd.api.project.NativeFileItem;
 import org.netbeans.modules.cnd.api.project.NativeFileItemSet;
 import org.netbeans.modules.cnd.spi.CndCookieProvider;
-import org.openide.util.WeakSet;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -41,8 +43,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
 
     private static final class NativeFileItemSetImpl implements NativeFileItemSet {
 
-        private /*WeakReference<NativeFileItem> or WeakSet<NativeFileItem>*/Object singleItemOrItems;
-        private /*WeakReference<PropertyChangeListener> or WeakSet<PropertyChangeListener>*/Object singleListenerOrListeners;
+        private /*WeakReference<NativeFileItem> or Set<NativeFileItem>*/Object singleItemOrItems;
+        private /*WeakReference<PropertyChangeListener> or Set<PropertyChangeListener>*/Object singleListenerOrListeners;
 
         @Override
         public synchronized Collection<NativeFileItem> getItems() {
@@ -54,8 +56,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                 if (first != null) {
                     res.add(first);
                 }
-            } else if (singleItemOrItems instanceof WeakSet){
-                WeakSet<NativeFileItem> items = (WeakSet<NativeFileItem>) singleItemOrItems;
+            } else if (singleItemOrItems instanceof Set){
+                Set<NativeFileItem> items = (Set<NativeFileItem>) singleItemOrItems;
                 res = new ArrayList<>(items.size());
                 for(NativeFileItem item : items) {
                     if (item != null) {
@@ -86,12 +88,12 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                         } else if (item.equals(first)) {
                             return;
                         }
-                        WeakSet<NativeFileItem> items = new WeakSet<>(2);
+                        Set<NativeFileItem> items = Collections.newSetFromMap(new WeakHashMap<>(2));
                         items.add(first);
                         items.add(item);
                         singleItemOrItems = items;
-                    } else  if (singleItemOrItems instanceof WeakSet) {
-                        WeakSet<NativeFileItem> items = (WeakSet<NativeFileItem>) singleItemOrItems;
+                    } else  if (singleItemOrItems instanceof Set) {
+                        Set<NativeFileItem> items = (Set<NativeFileItem>) singleItemOrItems;
                         items.add(item);
                     }
                 }
@@ -112,8 +114,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                     if (item.equals(first)) {
                         singleItemOrItems = null;
                     }
-                } else  if (singleItemOrItems instanceof WeakSet) {
-                    WeakSet<NativeFileItem> items = (WeakSet<NativeFileItem>) singleItemOrItems;
+                } else  if (singleItemOrItems instanceof Set) {
+                    Set<NativeFileItem> items = (Set<NativeFileItem>) singleItemOrItems;
                     items.remove(item);
                 }
             }
@@ -125,8 +127,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
             if (singleItemOrItems instanceof WeakReference) {
                 WeakReference<NativeFileItem> singleItem = (WeakReference<NativeFileItem>) singleItemOrItems;
                 return singleItem.get() == null;
-            } else  if (singleItemOrItems instanceof WeakSet) {
-                WeakSet<NativeFileItem> items = (WeakSet<NativeFileItem>) singleItemOrItems;
+            } else  if (singleItemOrItems instanceof Set) {
+                Set<NativeFileItem> items = (Set<NativeFileItem>) singleItemOrItems;
                 return items.isEmpty();
             }
             return true;
@@ -145,12 +147,12 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                 } else if (listener.equals(first)) {
                     return;
                 }
-                WeakSet<PropertyChangeListener> listeners = new WeakSet<>(2);
+                Set<PropertyChangeListener> listeners = Collections.newSetFromMap(new WeakHashMap<>(2));
                 listeners.add(first);
                 listeners.add(listener);
                 singleListenerOrListeners = listeners;
-            } else  if (singleListenerOrListeners instanceof WeakSet) {
-                WeakSet<PropertyChangeListener> listeners = (WeakSet<PropertyChangeListener>) singleListenerOrListeners;
+            } else  if (singleListenerOrListeners instanceof Set) {
+                Set<PropertyChangeListener> listeners = (Set<PropertyChangeListener>) singleListenerOrListeners;
                 listeners.add(listener);
             }
         }
@@ -166,8 +168,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                 if (listener.equals(first)) {
                     singleListenerOrListeners = null;
                 }
-            } else  if (singleListenerOrListeners instanceof WeakSet) {
-                WeakSet<PropertyChangeListener> listeners = (WeakSet<PropertyChangeListener>) singleListenerOrListeners;
+            } else  if (singleListenerOrListeners instanceof Set) {
+                Set<PropertyChangeListener> listeners = (Set<PropertyChangeListener>) singleListenerOrListeners;
                 listeners.remove(listener);
             }
         }
@@ -181,8 +183,8 @@ public final class NativeFileItemSetProvider extends CndCookieProvider {
                     if (first != null) {
                         res.add(first);
                     }
-                } else  if (singleListenerOrListeners instanceof WeakSet) {
-                    WeakSet<PropertyChangeListener> listeners = (WeakSet<PropertyChangeListener>) singleListenerOrListeners;
+                } else  if (singleListenerOrListeners instanceof Set) {
+                    Set<PropertyChangeListener> listeners = (Set<PropertyChangeListener>) singleListenerOrListeners;
                     for(PropertyChangeListener l : listeners) {
                         if (l != null) {
                             res.add(l);

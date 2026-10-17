@@ -30,6 +30,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,7 +119,6 @@ import org.openide.util.Mutex;
 import org.openide.util.NbBundle;
 import org.openide.util.RequestProcessor;
 import org.openide.util.WeakListeners;
-import org.openide.util.WeakSet;
 import org.openide.util.lookup.Lookups;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -160,7 +161,7 @@ public final class MakeProjectImpl implements Project, MakeProjectListener, Make
     private final MutableCP sourcepath;
     private final PropertyChangeListener indexerListener;
     private String configurationXMLComment;
-    private final Set<MyInterrupter> interrupters = new WeakSet<>();
+    private final Set<MyInterrupter> interrupters = Collections.newSetFromMap(new WeakHashMap<>());
 
     public MakeProjectImpl(MakeProjectHelper helper) throws IOException {
         LOGGER.log(Level.FINE, "Start of creation MakeProject@{0} {1}", new Object[]{System.identityHashCode(MakeProjectImpl.this), helper.getProjectDirectory()}); // NOI18N

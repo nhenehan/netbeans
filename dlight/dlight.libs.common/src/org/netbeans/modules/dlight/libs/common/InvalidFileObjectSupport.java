@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -37,7 +38,6 @@ import org.openide.filesystems.FileStateInvalidException;
 import org.openide.filesystems.FileSystem;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
-import org.openide.util.WeakSet;
 import org.openide.util.actions.SystemAction;
 import org.netbeans.modules.dlight.libs.common.invalid.InvalidFileObject;
 
@@ -96,14 +96,21 @@ public class InvalidFileObjectSupport {
             if (DLightLibsCommonLogger.isDebugMode() && new File(normPath.toString()).exists()) {
                 DLightLibsCommonLogger.getInstance().log(Level.INFO, "Creating an invalid file object for existing file {0}", path);
             }
-            FileObject fo = fileObjects.putIfAbsent(new InvalidFileObject((fileSystem == null) ? InvalidFileObjectSupport.dummyFileSystem : fileSystem, normPath));
+            FileObject candidate = new InvalidFileObject((fileSystem == null) ? InvalidFileObjectSupport.dummyFileSystem : fileSystem, normPath);
+            WeakReference<FileObject> ref = fileObjects.get(candidate);
+            FileObject fo = (ref == null) ? null : ref.get();
+            if (fo == null) {
+                fileObjects.put(candidate, new WeakReference<>(candidate));
+                fo = candidate;
+            }
             return fo;
         }
     }
     
     
     private final FileSystem fileSystem;
-    private final WeakSet<FileObject> fileObjects = new WeakSet<FileObject>();
+    /** canonical invalid file objects: each key maps to a weak reference to itself */
+    private final Map<FileObject, WeakReference<FileObject>> fileObjects = new WeakHashMap<>();
 
     private static final Map<FileSystem, InvalidFileObjectSupport> instances = new WeakHashMap<FileSystem, InvalidFileObjectSupport>();
     private static final DummyFileSystem dummyFileSystem = new DummyFileSystem();
