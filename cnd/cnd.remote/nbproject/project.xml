@@ -211,11 +211,6 @@
                         <compile-dependency/>
                     </test-dependency>
                     <test-dependency>
-                        <code-name-base>org.netbeans.libs.clank</code-name-base>
-                        <recursive/>
-                        <compile-dependency/>
-                    </test-dependency>
-                    <test-dependency>
                         <code-name-base>org.netbeans.libs.junit4</code-name-base>
                         <compile-dependency/>
                     </test-dependency>
@@ -226,10 +221,6 @@
                     </test-dependency>
                     <test-dependency>
                         <code-name-base>org.netbeans.modules.cnd.api.project</code-name-base>
-                        <compile-dependency/>
-                    </test-dependency>
-                    <test-dependency>
-                        <code-name-base>org.netbeans.modules.cnd.asm</code-name-base>
                         <compile-dependency/>
                     </test-dependency>
                     <test-dependency>
