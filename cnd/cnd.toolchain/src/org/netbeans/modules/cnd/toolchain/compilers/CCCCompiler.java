@@ -50,6 +50,8 @@ import org.openide.util.Utilities;
 public abstract class CCCCompiler extends AbstractCompiler {
     
     private static final Logger LOG = Logger.getLogger(CCCCompiler.class.getName());
+    // checkModel() runs the compiler once per supported flag (thousands for gcc), over ssh for remote hosts
+    private static final boolean CHECK_MODEL = Boolean.getBoolean("cnd.toolchain.checkModel"); // NOI18N
     private static final String DEV_NULL = "/dev/null"; // NOI18N
     private static final String NB69_VERSION_PATTERN = "/var/cache/cnd/remote-includes/"; // NOI18N
     private static final RequestProcessor RP = new RequestProcessor("ReadErrorStream", 2); // NOI18N
@@ -838,7 +840,7 @@ public abstract class CCCCompiler extends AbstractCompiler {
     
     //For testing. Compare compiler macros definition with real mactos privided by compiler.
     protected void checkModel(CompilerDefinitions res, MyCallable<CompilerDefinitions> get) {
-        if (!LOG.isLoggable(Level.FINE)) {
+        if (!CHECK_MODEL || !LOG.isLoggable(Level.FINE)) {
             return;
         }
         final CompilerDescriptor descriptor = getDescriptor();
