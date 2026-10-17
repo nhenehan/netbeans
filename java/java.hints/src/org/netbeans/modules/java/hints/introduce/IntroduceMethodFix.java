@@ -334,8 +334,8 @@ public final class IntroduceMethodFix extends IntroduceFixBase implements Fix {
             if (!StatementTree.class.isAssignableFrom(leaf.getKind().asInterface())) {
                 continue;
             }
-            long treeStart = ci.getTrees().getSourcePositions().getStartPosition(ci.getCompilationUnit(), leaf);
-            long treeEnd = ci.getTrees().getSourcePositions().getEndPosition(ci.getCompilationUnit(), leaf);
+            long treeStart = ci.getTrees().getSourcePositions().getStartPosition(leaf);
+            long treeEnd = ci.getTrees().getSourcePositions().getEndPosition(leaf);
             if (treeStart != start || treeEnd != end) {
                 continue;
             }
@@ -355,7 +355,7 @@ public final class IntroduceMethodFix extends IntroduceFixBase implements Fix {
         List<? extends StatementTree> statements = tpStart.getLeaf().getKind() == Tree.Kind.BLOCK ? ((BlockTree) tpStart.getLeaf()).getStatements() : ((CaseTree) tpStart.getLeaf()).getStatements();
         int index = 0;
         for (StatementTree s : statements) {
-            long sStart = ci.getTrees().getSourcePositions().getStartPosition(ci.getCompilationUnit(), s);
+            long sStart = ci.getTrees().getSourcePositions().getStartPosition(s);
             if (sStart == start && from == (-1)) {
                 from = index;
             }
@@ -419,7 +419,8 @@ public final class IntroduceMethodFix extends IntroduceFixBase implements Fix {
     public ChangeInfo implement() throws Exception {
         JButton btnOk = new JButton(NbBundle.getMessage(IntroduceHint.class, "LBL_Ok"));
         JButton btnCancel = new JButton(NbBundle.getMessage(IntroduceHint.class, "LBL_Cancel"));
-        IntroduceMethodPanel panel = new IntroduceMethodPanel("", duplicatesCount, targets, targetIsInterface); //NOI18N
+        btnCancel.setDefaultCapable(false);
+        IntroduceMethodPanel panel = new IntroduceMethodPanel("method", duplicatesCount, targets, targetIsInterface); //NOI18N
         String caption = NbBundle.getMessage(IntroduceHint.class, "CAP_IntroduceMethod");
         DialogDescriptor dd = new DialogDescriptor(panel, caption, true, new Object[]{btnOk, btnCancel}, btnOk, DialogDescriptor.DEFAULT_ALIGN, null, null);
         NotificationLineSupport notifier = dd.createNotificationLineSupport();
@@ -466,8 +467,8 @@ public final class IntroduceMethodFix extends IntroduceFixBase implements Fix {
         public int compare(Occurrence o1, Occurrence o2) {
             Tree r1 = o1.getOccurrenceRoot().getLeaf();
             Tree r2 = o2.getOccurrenceRoot().getLeaf();
-            int p1 = (int)positions.getStartPosition(cut, r1);
-            int p2 = (int)positions.getStartPosition(cut, r2);
+            int p1 = (int)positions.getStartPosition(r1);
+            int p2 = (int)positions.getStartPosition(r2);
             return p1 - p2;
         }
         
@@ -873,8 +874,8 @@ public final class IntroduceMethodFix extends IntroduceFixBase implements Fix {
                             }
                         }
                     }
-                    int startOff = (int) copy.getTrees().getSourcePositions().getStartPosition(copy.getCompilationUnit(), firstSt);
-                    int endOff = (int) copy.getTrees().getSourcePositions().getEndPosition(copy.getCompilationUnit(), lastSt);
+                    int startOff = (int) copy.getTrees().getSourcePositions().getStartPosition(firstSt);
+                    int endOff = (int) copy.getTrees().getSourcePositions().getEndPosition(lastSt);
                     
                     if (usedAfter || !GraphicsEnvironment.isHeadless() && !IntroduceHint.shouldReplaceDuplicate(doc, startOff, endOff)) {
                         continue;

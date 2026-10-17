@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,11 +54,16 @@ import org.netbeans.junit.NbTestSuite;
 import org.netbeans.modules.classfile.ClassFile;
 import org.netbeans.modules.java.source.indexing.CompileWorker.ParsingOutput;
 import org.netbeans.modules.java.source.indexing.JavaCustomIndexer.CompileTuple;
+import org.netbeans.modules.parsing.impl.indexing.errors.TaskCache;
 import org.netbeans.modules.parsing.spi.indexing.Context;
+import org.netbeans.modules.parsing.spi.indexing.ErrorsCache;
+import org.netbeans.modules.parsing.spi.indexing.ErrorsCache.ErrorKind;
+import org.netbeans.modules.parsing.spi.indexing.ErrorsCache.Range;
 import org.netbeans.spi.java.classpath.support.ClassPathSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.filesystems.URLMapper;
+import org.openide.util.Pair;
 
 /**
  *
@@ -89,8 +95,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test3.sig",
-                                                       "cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test3.sig",
+                                                       "cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
         result = runIndexing(Arrays.asList(compileTuple("test/Test4.java", "package test; public class Test4 { void t() { Undef undef; } }")),
                              Collections.emptyList());
 
@@ -111,7 +117,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
     }
 
     public void testRepair2() throws Exception {
@@ -127,7 +133,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
         //TODO: check file content!!!
     }
 
@@ -144,7 +150,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
         //TODO: check file content!!!
     }
 
@@ -161,7 +167,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
         //TODO: check file content!!!
     }
 
@@ -178,8 +184,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig",
-                                                       "cache/s1/java/15/classes/test/Test4$1.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig",
+                                                       "cache/s1/java/16/classes/test/Test4$1.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -197,8 +203,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig",
-                                                       "cache/s1/java/15/classes/test/Test4$1.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig",
+                                                       "cache/s1/java/16/classes/test/Test4$1.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -216,7 +222,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -234,7 +240,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -255,7 +261,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
     }
 
@@ -275,9 +281,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test1.sig",
-                                                       "cache/s1/java/15/classes/test/Test2.sig",
-                                                       "cache/s1/java/15/classes/test/Test3.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test1.sig",
+                                                       "cache/s1/java/16/classes/test/Test2.sig",
+                                                       "cache/s1/java/16/classes/test/Test3.sig")),
                      createdFiles);
     }
 
@@ -294,7 +300,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")), createdFiles);
         //TODO: check file content!!!
     }
 
@@ -311,7 +317,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -332,7 +338,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -352,7 +358,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -370,7 +376,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -388,7 +394,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -406,7 +412,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/java/lang/Object.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/java/lang/Object.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -425,7 +431,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -445,8 +451,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Additional.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Additional.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -480,32 +486,32 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.put(getWorkDir().toURI().relativize(created.toURI()).getPath(), created);
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/AnnUse.sig",
-                                                       "cache/s1/java/15/classes/test/FirstAnnBroken.sig",
-                                                       "cache/s1/java/15/classes/test/FirstTwoAnnBroken.sig",
-                                                       "cache/s1/java/15/classes/test/FirstAnnOK.sig",
-                                                       "cache/s1/java/15/classes/test/Ann1.sig",
-                                                       "cache/s1/java/15/classes/test/Ann2.sig",
-                                                       "cache/s1/java/15/classes/test/Ann3.sig",
-                                                       "cache/s1/java/15/classes/test/Ann4.sig",
-                                                       "cache/s1/java/15/classes/test/Ann5.sig",
-                                                       "cache/s1/java/15/classes/test/Ann6.sig",
-                                                       "cache/s1/java/15/classes/test/AnnExtra.sig",
-                                                       "cache/s1/java/15/classes/test/EnumExtra.sig",
-                                                       "cache/s1/java/15/classes/test/MiddleBroken.sig",
-                                                       "cache/s1/java/15/classes/test/WrongType.sig",
-                                                       "cache/s1/java/15/classes/test/Additional.sig",
-                                                       "cache/s1/java/15/classes/test/WrongDefault.sig",
-                                                       "cache/s1/java/15/classes/test/ManyWrongTrailing.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/AnnUse.sig",
+                                                       "cache/s1/java/16/classes/test/FirstAnnBroken.sig",
+                                                       "cache/s1/java/16/classes/test/FirstTwoAnnBroken.sig",
+                                                       "cache/s1/java/16/classes/test/FirstAnnOK.sig",
+                                                       "cache/s1/java/16/classes/test/Ann1.sig",
+                                                       "cache/s1/java/16/classes/test/Ann2.sig",
+                                                       "cache/s1/java/16/classes/test/Ann3.sig",
+                                                       "cache/s1/java/16/classes/test/Ann4.sig",
+                                                       "cache/s1/java/16/classes/test/Ann5.sig",
+                                                       "cache/s1/java/16/classes/test/Ann6.sig",
+                                                       "cache/s1/java/16/classes/test/AnnExtra.sig",
+                                                       "cache/s1/java/16/classes/test/EnumExtra.sig",
+                                                       "cache/s1/java/16/classes/test/MiddleBroken.sig",
+                                                       "cache/s1/java/16/classes/test/WrongType.sig",
+                                                       "cache/s1/java/16/classes/test/Additional.sig",
+                                                       "cache/s1/java/16/classes/test/WrongDefault.sig",
+                                                       "cache/s1/java/16/classes/test/ManyWrongTrailing.sig")),
                      createdFiles.keySet());
         assertAnnotations("@test.Ann5 runtimeVisible=false",
-                          createdFiles.get("cache/s1/java/15/classes/test/FirstAnnBroken.sig"));
+                          createdFiles.get("cache/s1/java/16/classes/test/FirstAnnBroken.sig"));
         assertAnnotations("@test.Ann5 runtimeVisible=false",
-                          createdFiles.get("cache/s1/java/15/classes/test/FirstTwoAnnBroken.sig"));
+                          createdFiles.get("cache/s1/java/16/classes/test/FirstTwoAnnBroken.sig"));
         assertAnnotations("@test.Ann5 runtimeVisible=false",
-                          createdFiles.get("cache/s1/java/15/classes/test/FirstAnnOK.sig"));
+                          createdFiles.get("cache/s1/java/16/classes/test/FirstAnnOK.sig"));
         assertAnnotations("@test.Ann5 runtimeVisible=false, @test.Ann6 runtimeVisible=false",
-                          createdFiles.get("cache/s1/java/15/classes/test/MiddleBroken.sig"));
+                          createdFiles.get("cache/s1/java/16/classes/test/MiddleBroken.sig"));
     }
 
     private static void assertAnnotations(String expected, File classfile) throws IOException {
@@ -527,7 +533,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/package-info.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/package-info.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -545,8 +551,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig",
-                                                            "cache/s1/java/15/classes/test/Test$1.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig",
+                                                            "cache/s1/java/16/classes/test/Test$1.sig")),
                      createdFiles);
         ClasspathInfo cpInfo = ClasspathInfo.create(ClassPath.EMPTY, ClassPath.EMPTY, ClassPathSupport.createClassPath(getRoot()));
         Set<ElementHandle<TypeElement>> classIndexResult = cpInfo.getClassIndex().getElements(ElementHandle.createTypeElementHandle(ElementKind.ENUM, "test.Test"), EnumSet.of(SearchKind.IMPLEMENTORS), EnumSet.of(ClassIndex.SearchScope.SOURCE));
@@ -574,11 +580,11 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig",
-                                                            "cache/s1/java/15/classes/test/Test$1.sig",
-                                                            "cache/s1/java/15/classes/test/Test$2.sig",
-                                                            "cache/s1/java/15/classes/test/Test$3.sig",
-                                                            "cache/s1/java/15/classes/test/Test$4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig",
+                                                            "cache/s1/java/16/classes/test/Test$1.sig",
+                                                            "cache/s1/java/16/classes/test/Test$2.sig",
+                                                            "cache/s1/java/16/classes/test/Test$3.sig",
+                                                            "cache/s1/java/16/classes/test/Test$4.sig")),
                      createdFiles);
         ClasspathInfo cpInfo = ClasspathInfo.create(ClassPath.EMPTY, ClassPath.EMPTY, ClassPathSupport.createClassPath(getRoot()));
         Set<ElementHandle<TypeElement>> classIndexResult = cpInfo.getClassIndex().getElements(ElementHandle.createTypeElementHandle(ElementKind.INTERFACE, "java.lang.Runnable"), EnumSet.of(SearchKind.IMPLEMENTORS), EnumSet.of(ClassIndex.SearchScope.SOURCE));
@@ -613,7 +619,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
     }
 
@@ -638,9 +644,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig",
-                                                       "cache/s1/java/15/classes/test/Test$Inner.sig",
-                                                       "cache/s1/java/15/classes/test/Test$1.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig",
+                                                       "cache/s1/java/16/classes/test/Test$Inner.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1.sig")),
                      createdFiles);
     }
 
@@ -670,7 +676,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -685,6 +691,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        System.err.println(\"Hello, world!\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -714,7 +721,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -729,6 +736,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code - compiler.err.cant.resolve.location\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -763,7 +771,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -792,6 +800,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    private int F5a;\n" +
                 "    private int F5b;\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -820,7 +829,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -834,6 +843,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -865,7 +875,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -883,6 +893,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -914,7 +925,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -932,6 +943,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -964,7 +976,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -983,6 +995,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1015,7 +1028,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1037,6 +1050,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1078,9 +1092,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$1$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1117,6 +1131,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        };\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1147,7 +1162,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1162,9 +1177,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    }\n" +
                 "    \n" +
                 "    public Test(String s) {\n" +
-                "        super();\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1200,9 +1215,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$N.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$N.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1239,6 +1254,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1270,7 +1286,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1285,6 +1301,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code - compiler.err.cant.apply.symbol\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1318,7 +1335,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1336,6 +1353,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1370,9 +1388,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$Prop.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$Prop.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1412,6 +1430,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1445,8 +1464,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$T.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$T.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1471,6 +1490,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1524,11 +1544,11 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$N.sig",
-                                                       "cache/s1/java/15/classes/test/Test$1$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$1$2.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$N.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1$2.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1590,6 +1610,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1626,11 +1647,11 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$2.sig",
-                                                       "cache/s1/java/15/classes/test/Test$2$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$1$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$2.sig",
+                                                       "cache/s1/java/16/classes/test/Test$2$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1690,6 +1711,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code - compiler.err.cant.resolve.location.args\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1729,9 +1751,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test$1.sig",
-                                                       "cache/s1/java/15/classes/test/Test$N.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/Test$N.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1763,6 +1785,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1794,7 +1817,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1806,6 +1829,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    }\n" +
                 "    Test t;\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1846,9 +1870,9 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/SuperIntf.sig",
-                                                       "cache/s1/java/15/classes/test/SuperClass.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/SuperIntf.sig",
+                                                       "cache/s1/java/16/classes/test/SuperClass.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1878,6 +1902,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    public default void test2() {\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1909,7 +1934,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -1923,6 +1948,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        System.err.println();\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -1951,10 +1977,10 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Rect.sig",
-                                                       "cache/s1/java/15/classes/test/ColoredPoint.sig",
-                                                       "cache/s1/java/15/classes/test/Point.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Rect.sig",
+                                                       "cache/s1/java/16/classes/test/ColoredPoint.sig",
+                                                       "cache/s1/java/16/classes/test/Point.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")), createdFiles);
     }
 
     public void testEnhancedSwitch1() throws Exception {
@@ -1985,10 +2011,10 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Rect.sig",
-                                                       "cache/s1/java/15/classes/test/ColoredPoint.sig",
-                                                       "cache/s1/java/15/classes/test/Point.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Rect.sig",
+                                                       "cache/s1/java/16/classes/test/ColoredPoint.sig",
+                                                       "cache/s1/java/16/classes/test/Point.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")), createdFiles);
     }
 
     public void testEnhancedSwitch2() throws Exception {
@@ -2019,10 +2045,10 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Rect.sig",
-                                                       "cache/s1/java/15/classes/test/ColoredPoint.sig",
-                                                       "cache/s1/java/15/classes/test/Point.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Rect.sig",
+                                                       "cache/s1/java/16/classes/test/ColoredPoint.sig",
+                                                       "cache/s1/java/16/classes/test/Point.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")), createdFiles);
     }
 
     public void testEnhancedSwitch3() throws Exception {
@@ -2053,10 +2079,10 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Rect.sig",
-                                                       "cache/s1/java/15/classes/test/ColoredPoint.sig",
-                                                       "cache/s1/java/15/classes/test/Point.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Rect.sig",
+                                                       "cache/s1/java/16/classes/test/ColoredPoint.sig",
+                                                       "cache/s1/java/16/classes/test/Point.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")), createdFiles);
     }
 
     public void testRecordErroneousComponent() throws Exception {
@@ -2077,7 +2103,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
     }
 
@@ -2123,8 +2149,8 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/I.sig",
-                                                       "cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/I.sig",
+                                                       "cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -2161,6 +2187,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    \n" +
                 "    public Object test(Object o);\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -2179,7 +2206,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test4.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test4.sig")),
                      createdFiles);
         //TODO: check file content!!!
     }
@@ -2223,7 +2250,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -2242,6 +2269,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        throw new java.lang.RuntimeException(\"Uncompilable code\");\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -2277,7 +2305,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
@@ -2294,6 +2322,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "        }\n" +
                 "    }\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -2324,21 +2353,20 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")),
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")),
                      createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
                 "\n" +
-                "public class Test {\n" +
+                "public record Test(int wait) {\n" +
                 "    static {\n" +
                 "        throw new java.lang.RuntimeException(\"Uncompilable code - compiler.err.illegal.record.component.name\");\n" +
                 "    }\n" +
                 "    \n" +
                 "    public Test(int wait) {\n" +
-                "        super();\n" +
                 "    }\n" +
-                "    private final int wait;\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -2365,7 +2393,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")), createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
                 "\n" +
@@ -2391,6 +2419,7 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
                 "    }\n" +
                 "    private final int i;\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
     }
 
@@ -2417,18 +2446,64 @@ public class VanillaCompileWorkerTest extends CompileWorkerTestBase {
             createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
         }
 
-        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/15/classes/test/Test.sig")), createdFiles);
+        assertEquals(new HashSet<String>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig")), createdFiles);
         Map<String, String> expected = Collections.singletonMap("test/Test.java",
                 "package test;\n" +
                 "\n" +
-                "class Test {\n" +
+                "record Test(int i) {\n" +
                 "    \n" +
                 "    Test(int i) {\n" +
-                "        super();\n" +
                 "    }\n" +
-                "    private final int i;\n" +
                 "}");
+        if (!"\n".equals(System.lineSeparator())) file2Fixed.replaceAll((k, v) -> v.replaceAll(System.lineSeparator(), "\n"));
         assertEquals(expected, file2Fixed);
+    }
+
+    public void testBrokenWarningEndPos() throws Exception { //NETBEANS-7981
+        setCompilerOptions(Arrays.asList("-Xlint:deprecation"));
+
+        String code = """
+                      package test;
+                      public class Test {
+                          void t() {
+                              new D() {};
+                          }
+                      }
+                      class D {
+                          @Deprecated
+                          D() {}
+                      }
+                      """;
+        ParsingOutput result = runIndexing(Arrays.asList(compileTuple("test/Test.java",
+                                                                      code)),
+                                           Arrays.asList());
+
+        assertFalse(result.lowMemory);
+        assertTrue(result.success);
+
+        Set<String> createdFiles = new HashSet<>();
+
+        for (File created : result.createdFiles) {
+            createdFiles.add(getWorkDir().toURI().relativize(created.toURI()).getPath());
+        }
+
+        assertEquals(new HashSet<>(Arrays.asList("cache/s1/java/16/classes/test/Test.sig",
+                                                       "cache/s1/java/16/classes/test/Test$1.sig",
+                                                       "cache/s1/java/16/classes/test/D.sig")),
+                     createdFiles);
+        record Data(ErrorKind kind, Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> range) {}
+        List<Data> errors = TaskCache.getDefault().getErrors(getRoot().getFileObject("test/Test.java"), new ErrorsCache.ReverseConvertor<Data>() {
+            @Override
+            public Data get(ErrorKind kind, Range range, String message) {
+                return new Data(kind, Pair.of(Pair.of(range.start().line(),
+                                                      range.start().column()),
+                                              Pair.of(range.end().line(),
+                                                      range.end().column())));
+            }
+        });
+        assertEquals(List.of(new Data(ErrorKind.WARNING, Pair.of(Pair.of(4, 9), Pair.of(4, 19))),
+                             new Data(ErrorKind.WARNING, Pair.of(Pair.of(4, 17), Pair.of(4, 17)))),
+                     errors);
     }
 
     public static void noop() {}
