@@ -48,4 +48,20 @@
     <target name="-release.files" depends="-dlight-remote-release.files,-overwrite-binaries-zip">
     </target>
 
+    <!--
+        Opt-in: -Dfs_server.rust=true replaces the prebuilt C fs_server binaries (from
+        external/fs_server-1.0.zip) with the Rust implementation in tools/fs_server_rs,
+        for the Linux platforms whose Rust targets are installed (adds Linux-aarch64).
+        Requires cargo/rustup on the build machine; see tools/fs_server_rs/README.md.
+    -->
+    <target name="-fs-server-rust" if="fs_server.rust">
+        <exec executable="sh" dir="tools/fs_server_rs" failonerror="true">
+            <arg value="build-dist.sh"/>
+            <arg file="${cluster}"/>
+        </exec>
+    </target>
+
+    <!-- after projectized.release, which extracts the C binaries from the zip into the cluster -->
+    <target name="release" depends="projectized.release,-fs-server-rust"/>
+
 </project>

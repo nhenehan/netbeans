@@ -18,6 +18,7 @@
 ###### BEGIN OF EXCLUSIONS (Do not remove this marker!)
 ###### build artifacts
 **/build/**
+dlight/dlight.remote.impl/tools/fs_server_rs/target/**
 licenses/**
 nbbuild/licenses/**
 nbbuild/netbeans/**
