@@ -44,10 +44,17 @@ import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.VIS;
 public class DwarfAttribute {
     public final ATTR attrName;
     public final FORM valueForm;
+    /** The value of a DW_FORM_implicit_const attribute, which is stored in the abbreviation, not in the entry. */
+    public final long implicitConst;
 
     public DwarfAttribute(int nameOrdinal, int formOrdinal) {
+        this(nameOrdinal, formOrdinal, 0);
+    }
+
+    public DwarfAttribute(int nameOrdinal, int formOrdinal, long implicitConst) {
         this.attrName = ATTR.get(nameOrdinal);
         this.valueForm = FORM.get(formOrdinal);
+        this.implicitConst = implicitConst;
     }
 
     public void dump(PrintStream out, Object value) {

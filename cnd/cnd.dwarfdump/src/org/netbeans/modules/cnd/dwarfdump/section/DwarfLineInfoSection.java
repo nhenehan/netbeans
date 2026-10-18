@@ -33,9 +33,13 @@ import org.netbeans.modules.cnd.dwarfdump.reader.DwarfReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.ElfConstants;
+import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.FORM;
 import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.LNE;
 import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.LNS;
 import org.netbeans.modules.cnd.dwarfdump.reader.ByteStreamReader;
@@ -67,10 +71,39 @@ public class DwarfLineInfoSection extends ElfSection {
 
         DwarfStatementList stmt_list = new DwarfStatementList(offset);
 
-        stmt_list.total_length = reader.readDWlen();
+        // a line table can be 32- or 64-bit DWARF regardless of the unit that
+        // was read last, so take the offset size from its own length field
+        int previousClass = reader.getFileClass();
+        try {
+            return readStatementList(stmt_list);
+        } finally {
+            if (previousClass != 0) { // 0: not set yet
+                reader.setFileClass(previousClass);
+            }
+        }
+    }
+
+    private DwarfStatementList readStatementList(DwarfStatementList stmt_list) throws IOException {
+        int length = reader.readInt();
+        if (length == -1) {
+            reader.setFileClass(ElfConstants.ELFCLASS64);
+            stmt_list.total_length = reader.readLong();
+        } else {
+            reader.setFileClass(ElfConstants.ELFCLASS32);
+            stmt_list.total_length = ByteStreamReader.uintToLong(length);
+        }
         stmt_list.version = reader.readShort();
+        if (stmt_list.version >= 5) {
+            stmt_list.address_size = ByteStreamReader.ubyteToInt(reader.readByte());
+            reader.readByte(); // segment_selector_size
+        }
         stmt_list.prologue_length = reader.read3264();
+        // the line number program starts right after the header
+        stmt_list.program_offset = reader.getFilePointer() - header.getSectionOffset() + stmt_list.prologue_length;
         stmt_list.minimum_instruction_length = ByteStreamReader.ubyteToInt(reader.readByte());
+        if (stmt_list.version >= 4) {
+            stmt_list.maximum_operations_per_instruction = ByteStreamReader.ubyteToInt(reader.readByte());
+        }
         stmt_list.default_is_stmt = ByteStreamReader.ubyteToInt(reader.readByte());
         stmt_list.line_base = reader.readByte();
         stmt_list.line_range = ByteStreamReader.ubyteToInt(reader.readByte());
@@ -80,6 +113,11 @@ public class DwarfLineInfoSection extends ElfSection {
 
         for (int i = 0; i < stmt_list.opcode_base - 1; i++) {
             stmt_list.standard_opcode_lengths[i] = reader.readUnsignedLEB128();
+        }
+
+        if (stmt_list.version >= 5) {
+            readEntryTables(stmt_list);
+            return stmt_list;
         }
 
         String dirname = reader.readString();
@@ -96,6 +134,74 @@ public class DwarfLineInfoSection extends ElfSection {
             fname = reader.readString();
         }
         return stmt_list;
+    }
+
+    // DWARF 5 line number header content types (DW_LNCT_*)
+    private static final int DW_LNCT_path = 0x1;
+    private static final int DW_LNCT_directory_index = 0x2;
+    private static final int DW_LNCT_timestamp = 0x3;
+    private static final int DW_LNCT_size = 0x4;
+
+    /**
+     * Reads the DWARF 5 directory and file name tables, which describe their
+     * entries with (content type, form) pairs. Directory 0 is the compilation
+     * directory and is left out of includeDirs, so directory indices keep the
+     * meaning they had before DWARF 5 (0 = compilation directory). File 0 is
+     * the primary source file and is kept: DWARF 5 file numbers start at 0.
+     */
+    private void readEntryTables(DwarfStatementList stmt_list) throws IOException {
+        stmt_list.fileIndexBase = 0;
+        List<Object[]> directories = readEntryTable();
+        for (int i = 1; i < directories.size(); i++) {
+            Object path = directories.get(i)[DW_LNCT_path];
+            stmt_list.includeDirs.add(path == null ? "" : path.toString()); // NOI18N
+        }
+        for (Object[] file : readEntryTable()) {
+            Object path = file[DW_LNCT_path];
+            stmt_list.fileEntries.add(new FileEntry(path == null ? "" : path.toString(), // NOI18N
+                    toInt(file[DW_LNCT_directory_index]), toLong(file[DW_LNCT_timestamp]), toLong(file[DW_LNCT_size])));
+        }
+    }
+
+    /** Reads one entry format description and the entries it describes. */
+    private List<Object[]> readEntryTable() throws IOException {
+        int formatCount = ByteStreamReader.ubyteToInt(reader.readByte());
+        int[] contentTypes = new int[formatCount];
+        FORM[] forms = new FORM[formatCount];
+        for (int i = 0; i < formatCount; i++) {
+            contentTypes[i] = reader.readUnsignedLEB128();
+            forms[i] = FORM.get(reader.readUnsignedLEB128());
+        }
+        int count = reader.readUnsignedLEB128();
+        List<Object[]> entries = new ArrayList<Object[]>(count);
+        for (int e = 0; e < count; e++) {
+            Object[] entry = new Object[DW_LNCT_size + 1];
+            for (int i = 0; i < formatCount; i++) {
+                Object value = ((DwarfReader) reader).readForm(forms[i]);
+                if (contentTypes[i] >= DW_LNCT_path && contentTypes[i] <= DW_LNCT_size) {
+                    entry[contentTypes[i]] = value; // DW_LNCT_MD5 and vendor types are skipped
+                }
+            }
+            entries.add(entry);
+        }
+        return entries;
+    }
+
+    private static int toInt(Object value) {
+        return (int) toLong(value);
+    }
+
+    private static long toLong(Object value) {
+        if (value instanceof Byte) {
+            return 0xFFL & (Byte) value;
+        } else if (value instanceof Short) {
+            return 0xFFFFL & (Short) value;
+        } else if (value instanceof Integer) {
+            return 0xFFFFFFFFL & (Integer) value;
+        } else if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        return 0;
     }
 
     @Override
@@ -122,7 +228,7 @@ public class DwarfLineInfoSection extends ElfSection {
         long currPos = reader.getFilePointer();
         try {
             DwarfStatementList statementList = getStatementList(shift);
-            reader.seek(header.getSectionOffset() + shift + statementList.prologue_length + (reader.is32Bit()?10:22));
+            reader.seek(header.getSectionOffset() + statementList.program_offset);
             Set<LineNumber> res = interpret(statementList, shift, target);
             if (!res.isEmpty()) {
                 return res.iterator().next();
@@ -137,7 +243,7 @@ public class DwarfLineInfoSection extends ElfSection {
         long currPos = reader.getFilePointer();
         try {
             DwarfStatementList statementList = getStatementList(shift);
-            reader.seek(header.getSectionOffset() + shift + statementList.prologue_length + (reader.is32Bit()?10:22));
+            reader.seek(header.getSectionOffset() + statementList.program_offset);
             return interpret(statementList, shift, 0);
         } finally {
             reader.seek(currPos);
@@ -172,7 +278,7 @@ public class DwarfLineInfoSection extends ElfSection {
                         switch (LNE.get(opcode)) {
                             case DW_LNE_end_sequence:
                                 lineNumber = prev_lineno;
-                                sourceFile = ((prev_fileno >= 0 && prev_fileno < section.getFileEntries().size()) ? section.getFilePath(prev_fileno + 1) : define_file);
+                                sourceFile = (section.hasFile(prev_fileno + 1) ? section.getFilePath(prev_fileno + 1) : define_file);
                                 if (sourceFile != null) {
                                     if (target > 0) {
                                         if (target >= prev_base_address && target < address) {
@@ -219,7 +325,7 @@ public class DwarfLineInfoSection extends ElfSection {
                     case DW_LNS_copy:
                         lineNumber = prev_lineno == 1 ? lineno : prev_lineno;
                         fileNumber = prev_fileno == 0 ? fileno : prev_fileno;
-                        sourceFile = ((fileNumber >= 0 && fileNumber < section.getFileEntries().size()) ? section.getFilePath(fileNumber + 1) : define_file);
+                        sourceFile = (section.hasFile(fileNumber + 1) ? section.getFilePath(fileNumber + 1) : define_file);
                         if (sourceFile != null) {
                             if (target > 0) {
                                 if (target >= prev_base_address && target < address) {
@@ -283,7 +389,7 @@ public class DwarfLineInfoSection extends ElfSection {
                 int line_adv = section.line_base + (adj % section.line_range);
                 long new_addr = address + addr_adv;
                 int new_line = lineno + line_adv;
-                sourceFile = ((prev_fileno >= 0 && prev_fileno < section.getFileEntries().size()) ? section.getFilePath(prev_fileno + 1) : define_file);
+                sourceFile = (section.hasFile(prev_fileno + 1) ? section.getFilePath(prev_fileno + 1) : define_file);
                 if (sourceFile != null) {
                     if (target > 0) {
                         if (target >= prev_base_address && target < new_addr) {

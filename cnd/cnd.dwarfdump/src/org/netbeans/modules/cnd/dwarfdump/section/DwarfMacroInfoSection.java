@@ -187,6 +187,14 @@ public class DwarfMacroInfoSection extends ElfSection {
                     table.addEntry(entry);
                     break;
                 }
+                case DW_MACRO_define_strx:
+                case DW_MACRO_undef_strx:
+                    // DWARF 5: the string is a .debug_str_offsets index relative
+                    // to the unit's DW_AT_str_offsets_base, which is not known
+                    // here (gcc only emits these for split DWARF); skip it
+                    reader.readUnsignedLEB128(); // line
+                    reader.readUnsignedLEB128(); // index
+                    break;
                 case DW_MACRO_transparent_include_alt:
                 {
                     long index;
@@ -314,6 +322,14 @@ public class DwarfMacroInfoSection extends ElfSection {
                     } else {
                         adress = reader.readLong();
                     }
+                    break;
+                case DW_MACRO_define_strx:
+                case DW_MACRO_undef_strx:
+                    // DWARF 5: the string is a .debug_str_offsets index relative
+                    // to the unit's DW_AT_str_offsets_base, which is not known
+                    // here (gcc only emits these for split DWARF); skip it
+                    reader.readUnsignedLEB128(); // line
+                    reader.readUnsignedLEB128(); // index
                     break;
                 case DW_MACRO_transparent_include_alt:
                 {

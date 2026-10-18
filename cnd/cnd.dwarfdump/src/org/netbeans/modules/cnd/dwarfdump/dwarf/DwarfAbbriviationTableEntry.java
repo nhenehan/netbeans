@@ -47,8 +47,12 @@ public class DwarfAbbriviationTableEntry {
     }
 
     public void addAttribute(int attrName, int valueForm) {
+        addAttribute(attrName, valueForm, 0);
+    }
+
+    public void addAttribute(int attrName, int valueForm, long implicitConst) {
         if (attrName != 0 && valueForm != 0) {
-            attributes.add(new DwarfAttribute(attrName, valueForm));
+            attributes.add(new DwarfAttribute(attrName, valueForm, implicitConst));
         }
     }
 

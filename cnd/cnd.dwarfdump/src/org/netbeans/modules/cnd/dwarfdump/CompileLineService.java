@@ -270,10 +270,7 @@ public class CompileLineService {
                         }
                         continue;
                     }
-                    if (LANG.DW_LANG_C.toString().equals(lang)
-                            || LANG.DW_LANG_C89.toString().equals(lang)
-                            || LANG.DW_LANG_C99.toString().equals(lang)
-                            || LANG.DW_LANG_C_plus_plus.toString().equals(lang)) {
+                    if (LANG.isC(lang) || LANG.isCpp(lang)) {
                         try {
                             list.add(SourceFile.createSourceFile(cu, dwarf));
                         } catch (IOException ex){

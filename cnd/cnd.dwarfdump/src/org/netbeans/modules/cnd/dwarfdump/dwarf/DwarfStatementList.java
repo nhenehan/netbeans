@@ -40,7 +40,11 @@ public class DwarfStatementList {
     public long total_length;
     public int version;
     public long prologue_length;
+    /** Offset of the line number program in .debug_line (after the header). */
+    public long program_offset;
+    public int address_size;
     public int minimum_instruction_length;
+    public int maximum_operations_per_instruction = 1;
     public int default_is_stmt;
     public int line_base;
     public int line_range;
@@ -49,6 +53,12 @@ public class DwarfStatementList {
     public List<String> includeDirs = new ArrayList<String>();
     public List<FileEntry> fileEntries = new ArrayList<FileEntry>();
     public Map<String, Set<FileEntry>> name2entry;
+    /**
+     * The number of the first file entry: file numbers start at 1 up to
+     * DWARF 4 and at 0 in DWARF 5. Directory indices are unaffected (0 is
+     * the compilation directory, includeDirs holds 1 and up).
+     */
+    public int fileIndexBase = 1;
 
     private long offset;
 
@@ -65,7 +75,7 @@ public class DwarfStatementList {
     public List<String> getFilePaths() {
         List<String> result = new ArrayList<String>();
 
-        for (int idx = 1; idx <= fileEntries.size(); idx++) {
+        for (int idx = fileIndexBase; idx < fileIndexBase + fileEntries.size(); idx++) {
             String filepath = getFilePath(idx);
             if (filepath != null) {
                 result.add(filepath);
@@ -85,6 +95,7 @@ public class DwarfStatementList {
         out.printf("  %-28s %s%n", "DWARF Version:", version); // NOI18N
         out.printf("  %-28s %s%n", "Prologue Length:", prologue_length); // NOI18N
         out.printf("  %-28s %s%n", "Minimum Instruction Length:", minimum_instruction_length); // NOI18N
+        out.printf("  %-28s %s%n", "Maximum Ops per Instruction:", maximum_operations_per_instruction); // NOI18N
         out.printf("  %-28s %s%n", "Initial value of 'is_stmt':", default_is_stmt); // NOI18N
         out.printf("  %-28s %s%n", "Line Base:", line_base); // NOI18N
         out.printf("  %-28s %s%n", "Line Range:", line_range); // NOI18N
@@ -108,9 +119,9 @@ public class DwarfStatementList {
         out.println("%n The File Name Table:%n"); // NOI18N
         out.println(" Entry Dir   Time  Size  Name"); // NOI18N
 
-        idx = 0;
+        idx = fileIndexBase;
         for (FileEntry fileEntry : fileEntries) {
-            out.printf(" %-6d%-6d%-6d%-6d%s%n", ++idx, fileEntry.dirIndex, fileEntry.modifiedTime, fileEntry.fileSize, fileEntry.fileName); // NOI18N
+            out.printf(" %-6d%-6d%-6d%-6d%s%n", idx++, fileEntry.dirIndex, fileEntry.modifiedTime, fileEntry.fileSize, fileEntry.fileName); // NOI18N
         }
     }
 
@@ -151,7 +162,7 @@ public class DwarfStatementList {
     }
 
     private int getFileEntryIdx(int dirIdx, String fname) {
-        int idx = 0;
+        int idx = fileIndexBase - 1;
 
         for (FileEntry fileEntry : fileEntries) {
             idx++;
@@ -160,11 +171,16 @@ public class DwarfStatementList {
             }
         }
 
-        return 0;
+        return fileIndexBase - 1;
+    }
+
+    /** Whether idx is a valid file number of this table. */
+    public boolean hasFile(int idx) {
+        return idx >= fileIndexBase && idx < fileIndexBase + fileEntries.size();
     }
 
     public String getFilePath(int idx) {
-        FileEntry fileEntry = fileEntries.get(idx - 1);
+        FileEntry fileEntry = fileEntries.get(idx - fileIndexBase);
 
         if (fileEntry == null || fileEntry.fileName.equals("<internal>") || fileEntry.fileName.equals("<built-in>")) { // NOI18N
             return null;

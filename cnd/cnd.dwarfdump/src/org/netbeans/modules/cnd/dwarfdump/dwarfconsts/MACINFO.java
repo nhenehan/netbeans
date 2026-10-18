@@ -36,6 +36,10 @@ public enum MACINFO {
     DW_MACRO_define_indirect_alt(0x08),
     DW_MACRO_undef_indirect_alt(0x09),
     DW_MACRO_transparent_include_alt(0x0a),
+    // dwarf5 (0x05-0x0a above are DW_MACRO_define_strp, undef_strp, import,
+    // define_sup, undef_sup and import_sup there)
+    DW_MACRO_define_strx(0x0b),
+    DW_MACRO_undef_strx(0x0c),
     
     DW_MACINFO_vendor_ext(0xff);
 

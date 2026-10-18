@@ -97,7 +97,10 @@ public final class SourceFile implements CompilationUnitInterface {
                 if (dwarfStatementTable != null) {
                     List<Integer> commandLineIncludedFiles = dwarfMacroTable.getCommandLineIncludedFiles();
                     for(int i : commandLineIncludedFiles) {
-                        String includedSource = dwarfStatementTable.getFilePath(i);
+                        String includedSource = dwarfStatementTable.hasFile(i) ? dwarfStatementTable.getFilePath(i) : null;
+                        if (includedSource == null) {
+                            continue;
+                        }
                         if (includedSource.startsWith("./")) { // NOI18N
                             includedSource = res.compileDir+includedSource.substring(1);
                         }
@@ -251,7 +254,7 @@ public final class SourceFile implements CompilationUnitInterface {
             userUndefs = new ArrayList<String>();
             return;
         }
-        Artifacts res = driver.gatherCompilerLine(st, CompileLineOrigin.BuildLog, LANG.DW_LANG_C_plus_plus.toString().equals(sourceLanguage));
+        Artifacts res = driver.gatherCompilerLine(st, CompileLineOrigin.BuildLog, LANG.isCpp(sourceLanguage));
         userPaths = new ArrayList<String>(res.getUserIncludes());
         userIncludes = new ArrayList<String>(res.getUserFiles());
         userMacros = new LinkedHashMap<String, String>(res.getUserMacros());

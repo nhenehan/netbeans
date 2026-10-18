@@ -70,7 +70,22 @@ public class CompilationUnit implements CompilationUnitInterface{
     private int  version;
     private long debug_abbrev_offset;
     private byte address_size;
+    private int unit_type = DW_UT_compile;
+    // 32- or 64-bit DWARF; the reader is shared by all units, which may differ
+    private int offset_class = ElfConstants.ELFCLASS32;
+    // DWARF 5: where this unit's entries start in .debug_str_offsets and
+    // .debug_addr. When a producer omits them, the first contribution's base is
+    // right after its header (8 bytes in 32-bit DWARF, 16 in 64-bit).
+    private long str_offsets_base = -1;
+    private long addr_base = -1;
     private DwarfEntry root = null;
+
+    // DWARF 5 unit types (DW_UT_*)
+    private static final int DW_UT_compile = 0x01;
+    private static final int DW_UT_type = 0x02;
+    private static final int DW_UT_skeleton = 0x04;
+    private static final int DW_UT_split_compile = 0x05;
+    private static final int DW_UT_split_type = 0x06;
 
     private DwarfAbbriviationTable abbr_table = null;
     private DwarfStatementList statement_list = null;
@@ -364,27 +379,53 @@ public class CompilationUnit implements CompilationUnitInterface{
         int aLegth = reader.readInt();
         if (aLegth == -1) {
             unit_length = reader.readLong();
-            reader.setFileClass(ElfConstants.ELFCLASS64);
+            offset_class = ElfConstants.ELFCLASS64;
         } else {
             unit_length = aLegth;
-            reader.setFileClass(ElfConstants.ELFCLASS32)            ;
+            offset_class = ElfConstants.ELFCLASS32;
         }
+        reader.setFileClass(offset_class);
         // The total length of this CU is unit_lenght + sizeof(unit_lenght field).
 
         long pos = reader.getFilePointer();
         unit_total_length = unit_length + pos - (debugInfoSectionOffset + unit_offset);
 
         version             = reader.readShort();
-        debug_abbrev_offset = reader.read3264();
-        address_size        = (byte)(0xff & reader.readByte());
+        long abbrevOffsetPosition;
+        if (version >= 5) {
+            // DWARF 5 moved the address size before the abbreviation offset and
+            // added the unit type
+            unit_type           = 0xff & reader.readByte();
+            address_size        = (byte)(0xff & reader.readByte());
+            abbrevOffsetPosition = reader.getFilePointer();
+            debug_abbrev_offset = reader.read3264();
+            switch (unit_type) {
+                case DW_UT_skeleton:
+                case DW_UT_split_compile:
+                    reader.readLong(); // dwo_id
+                    break;
+                case DW_UT_type:
+                case DW_UT_split_type:
+                    reader.readLong(); // type_signature
+                    reader.read3264(); // type_offset
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            abbrevOffsetPosition = reader.getFilePointer();
+            debug_abbrev_offset = reader.read3264();
+            address_size        = (byte)(0xff & reader.readByte());
+        }
 
         debugInfoOffset = reader.getFilePointer();
 
         reader.setAddressSize(address_size);
+        reader.setDwarfVersion(version);
 
         rela = (DwarfRelaDebugInfoSection)reader.getSection(SECTIONS.RELA_DEBUG_INFO);
         if (rela != null) {
-            Long abbrAddend = rela.getAbbrAddend(unit_offset + 6);
+            Long abbrAddend = rela.getAbbrAddend(abbrevOffsetPosition - debugInfoSectionOffset);
             if (abbrAddend != null) {
                 debug_abbrev_offset += abbrAddend;
             }
@@ -443,6 +484,9 @@ public class CompilationUnit implements CompilationUnitInterface{
     private DwarfEntry getDebugInfo(boolean readChildren) throws IOException {
         if (root == null || (readChildren && root.getChildren().isEmpty())) {
             //getPubnamesTable();
+            reader.setFileClass(offset_class);
+            reader.setAddressSize(address_size);
+            reader.setDwarfVersion(version);
             reader.seek(debugInfoOffset);
             root = readEntry(0, readChildren);
 
@@ -455,10 +499,10 @@ public class CompilationUnit implements CompilationUnitInterface{
     }
 
     private void setSpecializations(DwarfEntry entry) throws IOException {
-        Object o = entry.getAttributeValue(ATTR.DW_AT_specification);
+        int specification = DwarfEntry.toReference(entry.getAttributeValue(ATTR.DW_AT_specification));
 
-        if (o instanceof Integer) {
-            specifications.put(Long.valueOf(((Integer) o).intValue()), entry.getRefference());
+        if (specification >= 0) {
+            specifications.put(Long.valueOf(specification), entry.getRefference());
         }
 
         for (DwarfEntry child : entry.getChildren()) {
@@ -499,6 +543,24 @@ public class CompilationUnit implements CompilationUnitInterface{
                 entry.addValue(readAttrValue);
             }
         }
+        if (level == 0) {
+            // the unit's root entry carries the bases for the index forms; it
+            // may list them after attributes that use them
+            Object strBase = entry.getAttributeValue(ATTR.DW_AT_str_offsets_base);
+            Object addrBase = entry.getAttributeValue(ATTR.DW_AT_addr_base);
+            str_offsets_base = strBase instanceof Number ? ((Number) strBase).longValue() : (reader.is32Bit() ? 8 : 16);
+            addr_base = addrBase instanceof Number ? ((Number) addrBase).longValue() : 8;
+        }
+        List<Object> values = entry.getValues();
+        for (int i = 0; i < values.size(); i++) {
+            Object value = values.get(i);
+            if (value instanceof DwarfReader.IndexedValue) {
+                DwarfReader.IndexedValue indexed = (DwarfReader.IndexedValue) value;
+                values.set(i, indexed.string
+                        ? reader.resolveStringIndex(str_offsets_base, indexed.index)
+                        : reader.resolveAddressIndex(addr_base, indexed.index));
+            }
+        }
         return entry;
     }
 
@@ -532,18 +594,22 @@ public class CompilationUnit implements CompilationUnitInterface{
 
     private void initMacrosTable() throws IOException {
         Object macroInfoOffset;
-        DwarfMacroInfoSection macroInfoSection = (DwarfMacroInfoSection)reader.getSection(SECTIONS.DEBUG_MACINFO);
-        boolean isMacro =false;
-        if (macroInfoSection == null) {
+        DwarfMacroInfoSection macroInfoSection;
+        // DWARF 5 DW_AT_macros and the GNU extension it standardized both point
+        // into .debug_macro; older units point into .debug_macinfo
+        Object macros = root.getAttributeValue(ATTR.DW_AT_macros);
+        if (macros == null) {
+            macros = root.getAttributeValue(ATTR.DW_AT_GNU_macros);
+        }
+        if (macros != null) {
             macroInfoSection = (DwarfMacroInfoSection)reader.getSection(SECTIONS.DEBUG_MACRO);
-            if (macroInfoSection == null) {
-                return;
-            } else {
-                macroInfoOffset = root.getAttributeValue(ATTR.DW_AT_GNU_macros);
-                isMacro = true;
-            }
+            macroInfoOffset = macros;
         } else {
+            macroInfoSection = (DwarfMacroInfoSection)reader.getSection(SECTIONS.DEBUG_MACINFO);
             macroInfoOffset = root.getAttributeValue(ATTR.DW_AT_macro_info);
+        }
+        if (macroInfoSection == null) {
+            return;
         }
 
         if (macroInfoOffset instanceof Integer) {

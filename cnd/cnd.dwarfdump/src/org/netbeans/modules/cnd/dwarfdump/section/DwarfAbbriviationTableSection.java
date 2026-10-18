@@ -30,6 +30,7 @@ package org.netbeans.modules.cnd.dwarfdump.section;
 import java.io.ByteArrayOutputStream;
 import org.netbeans.modules.cnd.dwarfdump.dwarf.DwarfAbbriviationTable;
 import org.netbeans.modules.cnd.dwarfdump.dwarf.DwarfAbbriviationTableEntry;
+import org.netbeans.modules.cnd.dwarfdump.dwarfconsts.FORM;
 import org.netbeans.modules.cnd.dwarfdump.reader.ElfReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -109,7 +110,12 @@ public class DwarfAbbriviationTableSection extends ElfSection {
             while (name != 0 && form != 0) {
                 name = reader.readUnsignedLEB128();
                 form = reader.readUnsignedLEB128();
-                entry.addAttribute(name, form);
+                long implicitConst = 0;
+                if (form == FORM.DW_FORM_implicit_const.value()) {
+                    // DWARF 5: the value follows the form in the abbreviation
+                    implicitConst = reader.readSignedLEB128();
+                }
+                entry.addAttribute(name, form, implicitConst);
             }
 
             entries.add(entry);

@@ -29,6 +29,9 @@ public interface SECTIONS {
     String DYN_STR = ".dynstr"; // NOI18N
     String DYNAMIC = ".dynamic"; // NOI18N
     String DEBUG_LINE = ".debug_line"; // NOI18N
+    String DEBUG_LINE_STR = ".debug_line_str"; // DWARF 5 // NOI18N
+    String DEBUG_STR_OFFSETS = ".debug_str_offsets"; // DWARF 5 // NOI18N
+    String DEBUG_ADDR = ".debug_addr"; // DWARF 5 // NOI18N
     String DEBUG_MACINFO = ".debug_macinfo"; // NOI18N
     String DEBUG_MACRO = ".debug_macro"; // GNU extension // NOI18N 
     String DEBUG_ABBREV = ".debug_abbrev"; // NOI18N

@@ -174,12 +174,12 @@ public class DwarfEntry {
 
         if (attrIdx == -1) {
             if (recursive) {
-                Integer offset = -1;
+                int offset = -1;
 
                 if (abbriviationTableEntry.getAttribute(ATTR.DW_AT_abstract_origin) >= 0) {
-                    offset = (Integer)getAttributeValue(ATTR.DW_AT_abstract_origin);
+                    offset = toReference(getAttributeValue(ATTR.DW_AT_abstract_origin));
                 } else if (abbriviationTableEntry.getAttribute(ATTR.DW_AT_specification) >= 0) {
-                    offset = (Integer)getAttributeValue(ATTR.DW_AT_specification);
+                    offset = toReference(getAttributeValue(ATTR.DW_AT_specification));
                 }
 
 
@@ -221,19 +221,24 @@ public class DwarfEntry {
      * Note that this works only after all entries have been read.
      */
     public DwarfEntry getSpecification() throws IOException {
-        Object o = getAttributeValue(ATTR.DW_AT_specification);
-        if( o instanceof Integer ) {
-            return compilationUnit.getEntry(((Integer) o).intValue());
-        }
-        return null;
+        int offset = toReference(getAttributeValue(ATTR.DW_AT_specification));
+        return offset >= 0 ? compilationUnit.getEntry(offset) : null;
     }
 
     public DwarfEntry getAbstractOrigin() throws IOException {
-        Object o = getAttributeValue(ATTR.DW_AT_abstract_origin);
-        if (o instanceof Integer) {
-            return compilationUnit.getEntry(((Integer)o).intValue());
+        int offset = toReference(getAttributeValue(ATTR.DW_AT_abstract_origin));
+        return offset >= 0 ? compilationUnit.getEntry(offset) : null;
+    }
+
+    /**
+     * A unit-relative reference (DW_FORM_ref1/2/4/8/udata) as an int, or -1.
+     * References are Integer or, from DW_FORM_ref8 (64-bit DWARF), Long.
+     */
+    public static int toReference(Object value) {
+        if (value instanceof Integer || value instanceof Long) {
+            return ((Number) value).intValue();
         }
-        return null;
+        return -1;
     }
 
     public boolean hasChildren() {
@@ -424,7 +429,8 @@ public class DwarfEntry {
 
     public String getDeclarationFilePath() throws IOException {
         int fileIdx = (Integer)getUintAttributeValue(ATTR.DW_AT_decl_file);
-        return (fileIdx <= 0) ? null : compilationUnit.getStatementList().getFilePath(fileIdx);
+        DwarfStatementList statementList = compilationUnit.getStatementList();
+        return (statementList == null || !statementList.hasFile(fileIdx)) ? null : statementList.getFilePath(fileIdx);
     }
 
     public String getTypeDef() throws IOException {
@@ -453,22 +459,34 @@ public class DwarfEntry {
         return -1;
     }
 
-    List<Object> getValues() {
+    public List<Object> getValues() {
         return values;
     }
 
     public long getLowAddress() throws IOException{
-        byte[] bytes = (byte[])getAttributeValue(ATTR.DW_AT_low_pc);
-        if (bytes != null) {
-            return getAddress(bytes);
+        Object value = getAttributeValue(ATTR.DW_AT_low_pc);
+        if (value instanceof byte[]) {
+            return getAddress((byte[]) value);
         }
         return 0;
     }
 
     public long getHighAddress() throws IOException{
-        byte[] bytes = (byte[])getAttributeValue(ATTR.DW_AT_high_pc);
-        if (bytes != null) {
-            return getAddress(bytes);
+        Object value = getAttributeValue(ATTR.DW_AT_high_pc);
+        if (value instanceof byte[]) {
+            return getAddress((byte[]) value);
+        }
+        if (value instanceof Number) {
+            // since DWARF 4 a constant high_pc is the size, relative to low_pc
+            long size = ((Number) value).longValue();
+            if (value instanceof Integer) {
+                size &= 0xFFFFFFFFL;
+            } else if (value instanceof Short) {
+                size &= 0xFFFFL;
+            } else if (value instanceof Byte) {
+                size &= 0xFFL;
+            }
+            return getLowAddress() + size;
         }
         return 0;
     }
