@@ -34,6 +34,7 @@ import org.netbeans.modules.cnd.utils.MIMENames;
 import org.netbeans.modules.lsp.client.spi.LanguageServerProvider;
 import org.netbeans.modules.lsp.client.spi.MultiMimeLanguageServerProvider;
 import org.netbeans.modules.lsp.client.spi.ServerRestarter;
+import org.openide.filesystems.FileUtil;
 import org.openide.util.Lookup;
 import org.openide.util.Pair;
 
@@ -63,6 +64,13 @@ public class LanguageServerImpl implements MultiMimeLanguageServerProvider {
 
         MakeProject project = lookup.lookup(MakeProject.class);
         if (project == null) {
+            return null;
+        }
+
+        // clangd runs locally and only accepts file: URIs, so it cannot serve
+        // full remote projects (their files live on the remote file system)
+        if (FileUtil.toFile(project.getProjectDirectory()) == null) {
+            LOG.log(Level.FINE, "Not starting clangd for remote project {0}", project.getProjectDirectory());
             return null;
         }
 
