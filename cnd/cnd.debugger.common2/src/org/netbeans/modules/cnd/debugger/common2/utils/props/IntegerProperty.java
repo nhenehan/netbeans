@@ -52,7 +52,7 @@ public class IntegerProperty extends Property {
     // interface Property
     @Override
     public Object getAsObject () {
-	return new Integer(value);
+	return Integer.valueOf(value);
     }
 
     public final void set(int i) {

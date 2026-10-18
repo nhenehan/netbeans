@@ -18,6 +18,7 @@
  */
 package org.netbeans.modules.remote.test;
 
+import java.io.IOException;
 import junit.framework.Test;
 import org.netbeans.junit.NbTestSuite;
 import org.netbeans.modules.remote.impl.fs.RemoteFSTCKTestCase;
@@ -54,6 +55,30 @@ public class RemoteFSTCKFileObjectTest extends RemoteFSTCKTestCase {
         protected void tearDown() throws Exception {
             super.tearDown();
             RemoteTestSuiteBase.registerTestTearDown(this);
+        }
+
+        // These two count file accesses through a SecurityManager
+        // (org.openide.filesystems.test.StatFiles). Since JDK 18 that needs
+        // -Djava.security.manager=allow, and JDK 24+ refuses to start with it
+        // (JEP 486), so they only run where it is allowed explicitly.
+
+        @Override
+        public void testGetMIMETypeCached() throws IOException {
+            if (securityManagerSupported()) {
+                super.testGetMIMETypeCached();
+            }
+        }
+
+        @Override
+        public void testGetMIMETypeCachedInAtomicAction() throws IOException {
+            if (securityManagerSupported()) {
+                super.testGetMIMETypeCachedInAtomicAction();
+            }
+        }
+
+        private static boolean securityManagerSupported() {
+            return Runtime.version().feature() < 24
+                    && "allow".equals(System.getProperty("java.security.manager")); // NOI18N
         }
     }     
 }

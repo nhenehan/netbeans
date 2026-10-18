@@ -312,7 +312,7 @@ public final class SessionFilter extends ModelListenerSupport
 	NativeSession ds = NativeSession.map((Session) node);
 	if (ds != null) {
 	    if (PROP_SESSION_PID.equals(columnID)) {
-		return new Long(ds.getPid());
+		return Long.valueOf(ds.getPid());
 		/* no longer exist
 	    } else if (columnID == PROP_SESSION_CURRENT_LANGUAGE ) {
 		return node;

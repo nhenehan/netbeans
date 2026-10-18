@@ -200,7 +200,7 @@ import org.openide.filesystems.FileSystem;
 	int i = 1;
 	while (newFolder.exists() && (i < 100)) {
 	    newFolder = createFileObject(containingDir, MessageFormat.format(
-                    newFolderNextString, new Object[]{new Integer(i)}));
+                    newFolderNextString, new Object[]{Integer.valueOf(i)}));
 	    i++;
 	}
 

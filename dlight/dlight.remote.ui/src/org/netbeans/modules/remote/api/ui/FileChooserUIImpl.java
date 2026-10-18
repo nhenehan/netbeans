@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.security.AccessControlException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1856,7 +1855,7 @@ final class FileChooserUIImpl extends BasicFileChooserUI{
         if (f != null) {
             try {
                 writeable = f.canWrite();
-            } catch (AccessControlException ex) {
+            } catch (SecurityException ex) {
                 writeable = false;
             }
         }

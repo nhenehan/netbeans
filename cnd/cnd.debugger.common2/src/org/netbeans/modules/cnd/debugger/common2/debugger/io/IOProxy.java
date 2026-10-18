@@ -96,15 +96,6 @@ public abstract class IOProxy {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            stop();
-        } finally {
-            super.finalize();
-        }
-    }
-
     abstract String[] getIOFiles();
     
     protected abstract OutputStream createInStream() throws IOException;

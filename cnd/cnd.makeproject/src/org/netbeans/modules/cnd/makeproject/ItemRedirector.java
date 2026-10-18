@@ -23,8 +23,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
 import org.netbeans.api.project.FileOwnerQuery;
 import org.netbeans.api.project.Project;
 import org.netbeans.modules.cnd.makeproject.api.configurations.ConfigurationDescriptorProvider;
@@ -83,25 +81,23 @@ public class ItemRedirector implements FileObjectRedirector {
     
     public static FileObject resolveSymbolicLink(final FileObject fo) {
         try {
-            return AccessController.doPrivileged((PrivilegedExceptionAction<FileObject>) () -> {
-                URI uri = fo.toURI();
-                Path path = Paths.get(uri);
-                for (int i = 0; i < 5; i++) {
-                    if (Files.isSymbolicLink(path)) {
-                        Path to = Files.readSymbolicLink(path);
-                        if (!to.isAbsolute()) {
-                            to = path.getParent().resolve(to).normalize();
-                        }
-                        if (Files.isRegularFile(to)) {
-                            return FileUtil.toFileObject(to.toFile());
-                        }
-                        path = to;
-                    } else {
-                        return null;
+            URI uri = fo.toURI();
+            Path path = Paths.get(uri);
+            for (int i = 0; i < 5; i++) {
+                if (Files.isSymbolicLink(path)) {
+                    Path to = Files.readSymbolicLink(path);
+                    if (!to.isAbsolute()) {
+                        to = path.getParent().resolve(to).normalize();
                     }
+                    if (Files.isRegularFile(to)) {
+                        return FileUtil.toFileObject(to.toFile());
+                    }
+                    path = to;
+                } else {
+                    return null;
                 }
-                return null;
-            });
+            }
+            return null;
         } catch (Exception ex) {
             CndUtils.printStackTraceOnce(ex);
             return null;

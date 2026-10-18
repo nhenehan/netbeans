@@ -114,7 +114,7 @@ public class DefaultProjectCopyPanel extends javax.swing.JPanel implements Docum
 
         setLayout(new java.awt.GridBagLayout());
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "LBL_Copy_Move_Dialog_Text", new Object[] {new Integer(isMove ? 1 : 0), ProjectUtils.getInformation(project).getDisplayName()})); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "LBL_Copy_Move_Dialog_Text", new Object[] {Integer.valueOf(isMove ? 1 : 0), ProjectUtils.getInformation(project).getDisplayName()})); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -217,7 +217,7 @@ public class DefaultProjectCopyPanel extends javax.swing.JPanel implements Docum
 
         progressImpl.setLayout(new java.awt.GridBagLayout());
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel5, org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "LBL_Copying_Moving", new Object[] {isMove ? new Integer(1) : new Integer(0)})); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel5, org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "LBL_Copying_Moving", new Object[] {isMove ? Integer.valueOf(1) : Integer.valueOf(0)})); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -262,7 +262,7 @@ public class DefaultProjectCopyPanel extends javax.swing.JPanel implements Docum
         gridBagConstraints.insets = new java.awt.Insets(8, 0, 0, 0);
         add(warningTextArea, gridBagConstraints);
 
-        getAccessibleContext().setAccessibleDescription(org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "ACSD_Copy_Move_Panel", new Object[] {new Integer(isMove ? 1 : 0)})); // NOI18N
+        getAccessibleContext().setAccessibleDescription(org.openide.util.NbBundle.getMessage(DefaultProjectCopyPanel.class, "ACSD_Copy_Move_Panel", new Object[] {Integer.valueOf(isMove ? 1 : 0)})); // NOI18N
     }// </editor-fold>//GEN-END:initComponents
 
     private void browseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseActionPerformed

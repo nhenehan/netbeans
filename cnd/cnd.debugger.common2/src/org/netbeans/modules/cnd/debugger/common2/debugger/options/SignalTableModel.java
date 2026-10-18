@@ -115,7 +115,7 @@ final class SignalTableModel extends AbstractTableModel {
 
 	switch(columnIndex) {
 	    case 0:
-		return new Integer(signal.signo());
+		return Integer.valueOf(signal.signo());
 	    case 1:
 		return signal.name();
 	    case 2:

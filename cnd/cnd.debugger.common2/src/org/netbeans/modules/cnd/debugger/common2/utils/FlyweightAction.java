@@ -76,7 +76,7 @@ abstract public class FlyweightAction extends AbstractAction
 
 	// utility
 	protected void setMnemonic(char mnemonic) {
-	    putValue(MNEMONIC_KEY, new Integer(mnemonic));
+	    putValue(MNEMONIC_KEY, Integer.valueOf(mnemonic));
 	}
 
 	// utility

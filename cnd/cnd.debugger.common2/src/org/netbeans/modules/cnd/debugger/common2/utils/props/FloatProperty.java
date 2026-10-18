@@ -51,7 +51,7 @@ public final class FloatProperty extends Property {
     // interface Property
     @Override
     public final Object getAsObject () {
-	return new Float(value);
+	return Float.valueOf(value);
     }
 
     public final void set(float f) {

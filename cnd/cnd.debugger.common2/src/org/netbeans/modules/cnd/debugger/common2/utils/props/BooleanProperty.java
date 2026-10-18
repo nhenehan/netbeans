@@ -52,7 +52,7 @@ public final class BooleanProperty extends Property {
     // interface Property
     @Override
     public final Object getAsObject () {
-	return new Boolean(value);
+	return Boolean.valueOf(value);
     }
 
     public final void set(boolean i) {

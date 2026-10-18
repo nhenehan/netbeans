@@ -656,9 +656,9 @@ public class MakefileWizard implements TemplateWizard.Iterator {
         //wd = new MakefileWizardDescriptor(this);
 	/*
         wd.putProperty(WizardDescriptor.PROP_AUTO_WIZARD_STYLE,			// NOI18N
-        new Boolean(true));
+        Boolean.valueOf(true));
         wd.putProperty(WizardDescriptor.PROP_CONTENT_DISPLAYED,			// NOI18N
-        new Boolean(true));
+        Boolean.valueOf(true));
         wd.setTitleFormat(new MessageFormat("{0}"));			// NOI18N
         wd.setTitle(title);
          */

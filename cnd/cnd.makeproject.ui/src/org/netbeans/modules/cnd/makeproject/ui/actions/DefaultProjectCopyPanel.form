@@ -25,7 +25,7 @@
   <AccessibilityProperties>
     <Property name="AccessibleContext.accessibleDescription" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
       <ResourceString bundle="org/netbeans/modules/project/uiapi/Bundle.properties" key="ACSD_Copy_Move_Panel" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;, {arguments})">
-        <Argument index="0" javacode="new Integer(isMove ? 1 : 0)"/>
+        <Argument index="0" javacode="Integer.valueOf(isMove ? 1 : 0)"/>
       </ResourceString>
     </Property>
   </AccessibilityProperties>
@@ -47,7 +47,7 @@
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
           <ResourceString bundle="org/netbeans/modules/project/uiapi/Bundle.properties" key="LBL_Copy_Move_Dialog_Text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;, {arguments})">
-            <Argument index="0" javacode="new Integer(isMove ? 1 : 0)"/>
+            <Argument index="0" javacode="Integer.valueOf(isMove ? 1 : 0)"/>
             <Argument index="1" javacode="ProjectUtils.getInformation(project).getDisplayName()"/>
           </ResourceString>
         </Property>
@@ -233,7 +233,7 @@
               <Properties>
                 <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                   <ResourceString bundle="org/netbeans/modules/project/uiapi/Bundle.properties" key="LBL_Copying_Moving" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;, {arguments})">
-                    <Argument index="0" javacode="isMove ? new Integer(1) : new Integer(0)"/>
+                    <Argument index="0" javacode="isMove ? Integer.valueOf(1) : Integer.valueOf(0)"/>
                   </ResourceString>
                 </Property>
               </Properties>

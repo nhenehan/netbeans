@@ -18,6 +18,8 @@
  */
 package org.netbeans.modules.subversion.remote.client;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.lang.ref.Cleaner;
 import java.awt.EventQueue;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -119,7 +121,9 @@ public class SvnClientInvocationHandler implements InvocationHandler {
     private SvnProgressSupport support;
     private final int handledExceptions;
     private static boolean metricsAlreadyLogged = false;
-    private volatile boolean disposed;
+    // shared with the cleanup action, which must not refer to this handler
+    private final AtomicBoolean disposed = new AtomicBoolean();
+    private static final Cleaner CLEANER = Cleaner.create();
     private static final Map<String, Mutex> locks = new HashMap<>(5);
     private static final ConfigFiles SENSITIVE_CONFIG_FILES = new ConfigFiles();
     private static final boolean KEEP_SERVERS_FILE = Boolean.getBoolean("versioning.subversion.keepServersFile");
@@ -130,6 +134,7 @@ public class SvnClientInvocationHandler implements InvocationHandler {
         assert desc     != null;
         
         this.adapter = adapter;
+        CLEANER.register(this, new AdapterDisposer(adapter, disposed));
         this.desc = desc;
         this.support = support;
         this.handledExceptions = handledExceptions;
@@ -182,7 +187,7 @@ public class SvnClientInvocationHandler implements InvocationHandler {
             }
 
             if (DISPOSE_METHOD.equals(method.getName())) {
-                disposed = true;
+                disposed.set(true);
             }
             Mutex mutex = getLock(method, args);
             if (mutex == null) {
@@ -467,16 +472,26 @@ public class SvnClientInvocationHandler implements InvocationHandler {
         return eh.handleException();        
     }
 
-    @Override
-    protected void finalize () throws Throwable {
-        if (!disposed) {
-            try {
-                adapter.dispose();
-            } catch (Throwable t) {
-                // 
+    /** Disposes an adapter whose handler became unreachable without dispose(). */
+    private static final class AdapterDisposer implements Runnable {
+        private final CommandlineClient adapter;
+        private final AtomicBoolean disposed;
+
+        AdapterDisposer(CommandlineClient adapter, AtomicBoolean disposed) {
+            this.adapter = adapter;
+            this.disposed = disposed;
+        }
+
+        @Override
+        public void run() {
+            if (!disposed.getAndSet(true)) {
+                try {
+                    adapter.dispose();
+                } catch (Throwable t) {
+                    //
+                }
             }
         }
-        super.finalize();
     }
 
     private static class ConfigFiles extends HashMap<VCSFileProxy, Integer> {

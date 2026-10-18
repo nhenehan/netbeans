@@ -19,8 +19,6 @@
 package org.netbeans.modules.cnd.toolchain.ui.options;
 
 import java.awt.Color;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -118,12 +116,7 @@ public final class AddCompilerSetPanel extends javax.swing.JPanel implements Doc
     @Override
     public void removeNotify() {
         super.removeNotify();
-        AccessController.doPrivileged(new PrivilegedAction<Object>() {
-            @Override
-            public Object run() {
-                return compilerCheckExecutor.shutdownNow();
-            }
-        });
+        compilerCheckExecutor.shutdownNow();
     }
 
     public void setDialogDescriptor(DialogDescriptor dialogDescriptor) {

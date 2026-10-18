@@ -288,11 +288,6 @@ class DummyNode extends FilterNode {
 	    return original.toString();
 	}
 
-	@Override
-	protected void finalize() {
-	    assert false : "Node.Property.finalize(): NOT IMPLEMENTED";
-	}
-
 	/* Already overriden
 	public boolean equals(Object obj);
 	public int hashCode();
@@ -454,11 +449,6 @@ class DummyNode extends FilterNode {
 	@Override
 	public String toString() {
 	    return original.toString();
-	}
-
-	@Override
-	protected void finalize() {
-	    assert false : "FilterPropertySet.finalize(): NOT IMPLEMENTED";
 	}
 
 	/* Already overriden

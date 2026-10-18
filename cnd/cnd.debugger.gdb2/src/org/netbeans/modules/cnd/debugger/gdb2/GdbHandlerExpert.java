@@ -54,7 +54,7 @@ public class GdbHandlerExpert implements HandlerExpert {
     private static final boolean sendShortPaths = Boolean.getBoolean("gdb.breakpoints.shortpaths"); // NOI18N
 
     // "infinity" for gdb is largest signed 32bit number:
-    static final Integer infinity = new Integer(0x7fffffff);
+    static final Integer infinity = Integer.valueOf(0x7fffffff);
 
     private final GdbDebuggerImpl debugger;
 

@@ -37,9 +37,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -464,17 +461,12 @@ public final class LocalFileSystemProvider implements FileSystemProviderImplemen
         final Path filePath = Paths.get(fo.toURI());
         if (Files.isSymbolicLink(filePath)) {
             try {
-                return AccessController.doPrivileged(new PrivilegedExceptionAction<String>() {
-                    @Override
-                    public String run() throws IOException {
-                        Path linkPath = Files.readSymbolicLink(filePath);
-                        if (!linkPath.isAbsolute()) {
-                            linkPath = filePath.getParent().resolve(linkPath).normalize();
-                        }
-                        return linkPath.toFile().getAbsolutePath();
-                    }
-                });
-            } catch (PrivilegedActionException ex) {
+                Path linkPath = Files.readSymbolicLink(filePath);
+                if (!linkPath.isAbsolute()) {
+                    linkPath = filePath.getParent().resolve(linkPath).normalize();
+                }
+                return linkPath.toFile().getAbsolutePath();
+            } catch (IOException ex) {
                 ex.printStackTrace(System.err);
             }
         }

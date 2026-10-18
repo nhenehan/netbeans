@@ -18,6 +18,7 @@
  */
 package org.netbeans.modules.remote.impl.fs;
 
+import java.lang.ref.Cleaner;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -113,15 +114,42 @@ public final class RemotePlainFile extends RemoteFileObjectWithCache {
         return (RemoteDirectory) getParent(); // cast guaranteed by constructor
     }
 
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /** Closes the cache stream once, either from close() or when the wrapper is unreachable. */
+    private static final class StreamCloser implements Runnable {
+        private final InputStream is;
+        private final Runnable postClose;
+        private IOException failure;
+
+        StreamCloser(InputStream is, Runnable postClose) {
+            this.is = is;
+            this.postClose = postClose;
+        }
+
+        @Override
+        public void run() {
+            try {
+                is.close();
+            } catch (IOException ex) {
+                failure = ex;
+            } finally {
+                postClose.run();
+            }
+        }
+    }
+
     private final class InputStreamWrapper extends InputStream {
 
         private final InputStream is;
-        private boolean closed;
-        private final Runnable postClose;
+        private final StreamCloser closer;
+        private final Cleaner.Cleanable cleanable;
 
         public InputStreamWrapper(InputStream is, Runnable postClose) {
             this.is = is;
-            this.postClose = postClose;
+            this.closer = new StreamCloser(is, postClose);
+            // the closer must not refer to this wrapper, or it is never unreachable
+            this.cleanable = CLEANER.register(this, closer);
         }
 
         @Override
@@ -136,21 +164,13 @@ public final class RemotePlainFile extends RemoteFileObjectWithCache {
 
         @Override
         public void close() throws IOException {
-            if (closed) {
-                return;
-            }
-            try {
-                is.close();
-                closed = true;
-            } finally {
-                postClose.run();
+            cleanable.clean(); // runs the closer at most once
+            IOException failure = closer.failure;
+            if (failure != null) {
+                closer.failure = null;
+                throw failure;
             }
         }
-
-        @Override
-        protected void finalize() throws Throwable {
-            close();
-        }        
         
         @Override
         public boolean equals(Object obj) {
