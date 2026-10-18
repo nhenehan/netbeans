@@ -56,21 +56,12 @@ BUILD=./build
 
 APP_PATH=${DIST}/${PLATFORM_DIR}
 
-all: init privp process_start pty_open sigqueue stat
+all: init privp pty_open
 
 privp: init
 	${CC} ${CFLAGS} -o ${APP_PATH}/$@ $@.c
 
-process_start: init
-	${CC} ${CFLAGS} -o ${APP_PATH}/$@ $@.c
-
 pty_open: init
-	${CC} ${CFLAGS} -o ${APP_PATH}/$@ $@.c
-
-sigqueue: init
-	${CC} ${CFLAGS} ${LDFLAGS} -o ${APP_PATH}/$@ $@.c
-
-stat: init
 	${CC} ${CFLAGS} -o ${APP_PATH}/$@ $@.c
 
 clean:

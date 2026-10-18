@@ -55,10 +55,7 @@
         </df>
       </df>
       <in>privp.c</in>
-      <in>process_start.c</in>
       <in>pty_open.c</in>
-      <in>sigqueue.c</in>
-      <in>stat.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -178,15 +175,6 @@
           </preprocessorList>
         </cTool>
       </item>
-      <item path="process_start.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
       <item path="pty/src/env.c" ex="false" tool="0" flavor2="3">
         <cTool flags="3">
         </cTool>
@@ -216,24 +204,6 @@
         </cTool>
       </item>
       <item path="pty_open.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="sigqueue.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="stat.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
           <preprocessorList>
             <Elem>LINUX</Elem>
@@ -352,15 +322,6 @@
           </preprocessorList>
         </cTool>
       </item>
-      <item path="process_start.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
       <item path="pty/src/env.c" ex="false" tool="0" flavor2="3">
         <cTool flags="3">
         </cTool>
@@ -390,24 +351,6 @@
         </cTool>
       </item>
       <item path="pty_open.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="sigqueue.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="stat.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
           <preprocessorList>
             <Elem>LINUX</Elem>
@@ -526,15 +469,6 @@
           </preprocessorList>
         </cTool>
       </item>
-      <item path="process_start.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
       <item path="pty/src/env.c" ex="false" tool="0" flavor2="3">
         <cTool flags="3">
         </cTool>
@@ -564,24 +498,6 @@
         </cTool>
       </item>
       <item path="pty_open.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="sigqueue.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="2">
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_GNU_SOURCE</Elem>
-            <Elem>_XOPEN_SOURCE=700</Elem>
-          </preprocessorList>
-        </cTool>
-      </item>
-      <item path="stat.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
           <preprocessorList>
             <Elem>LINUX</Elem>
