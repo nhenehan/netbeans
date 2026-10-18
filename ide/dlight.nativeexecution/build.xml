@@ -37,7 +37,7 @@
         not installed is skipped with a warning, only Linux-x86_64 is required.
     -->
     <property name="extra.module.files"
-              value="bin/nativeexecution/Linux-x86_64/killall,bin/nativeexecution/Linux-x86_64/pty_open,bin/nativeexecution/Linux-aarch64/killall,bin/nativeexecution/Linux-aarch64/pty_open"/>
+              value="bin/nativeexecution/Linux-x86_64/killall,bin/nativeexecution/Linux-x86_64/pty_open,bin/nativeexecution/Linux-x86_64/pty,bin/nativeexecution/Linux-aarch64/killall,bin/nativeexecution/Linux-aarch64/pty_open,bin/nativeexecution/Linux-aarch64/pty"/>
 
     <target name="-helpers-rs-check">
         <exec executable="cargo" failifexecutionfails="false" resultproperty="helpers_rs.cargo.rc" outputproperty="helpers_rs.cargo.version">
@@ -63,6 +63,7 @@
                     <and>
                         <available file="${cluster}/bin/nativeexecution/Linux-x86_64/killall"/>
                         <available file="${cluster}/bin/nativeexecution/Linux-x86_64/pty_open"/>
+                        <available file="${cluster}/bin/nativeexecution/Linux-x86_64/pty"/>
                     </and>
                 </not>
             </condition>

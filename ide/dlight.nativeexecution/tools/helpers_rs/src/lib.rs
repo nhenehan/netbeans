@@ -18,6 +18,7 @@
 //! Code shared by the nativeexecution helper binaries.
 
 pub mod killall;
+pub mod pty;
 pub mod pty_open;
 
 use std::io::Write;

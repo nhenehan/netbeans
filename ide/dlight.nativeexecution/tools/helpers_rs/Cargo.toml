@@ -33,6 +33,10 @@ path = "src/bin/killall.rs"
 name = "pty_open"
 path = "src/bin/pty_open.rs"
 
+[[bin]]
+name = "pty"
+path = "src/bin/pty.rs"
+
 [dependencies]
 libc = "0.2"
 
