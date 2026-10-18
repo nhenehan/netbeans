@@ -28,6 +28,7 @@ and so do the helpers that have not been ported yet.
 | Helper | Replaces | Java side |
 |---|---|---|
 | `killall` | `tools/killall` | `signals/impl/NbKillAllSignalSupport` |
+| `pty_open` | `tools/pty_open.c` | `pty/PtyOpenUtility`, `pty/PtyAllocator` (the debugger's internal terminal) |
 
 ## killall
 
@@ -48,14 +49,38 @@ Two differences from the C tool, both fixes:
   The C tool's `-s` was undefined on Linux.
 - `-e` reads the whole `/proc/<pid>/environ`, not just its first 4048 bytes.
 
+## pty_open
+
+Allocates a pseudo terminal and prints a header that `PtyOpenUtility` parses:
+
+```
+PID: <its pid>
+TTY: /dev/pts/<n>
+
+```
+
+It keeps the slave open, so the pty survives debuggees that open and close it.
+Then it relays bytes from its stdin to the pty master, and from the master to
+its stdout, until stdin reaches EOF or hangs up. On exit it returns 0. Errors go
+to stdout as `pty_open: <message>`, with exit 1. `PtyAllocator` starts it with
+`exec` through `sh -s`, so the pid it reports is the shell's.
+`tests/pty_open.rs` runs that path, and with `PTY_OPEN_C` set it compares a whole
+terminal session with the C tool.
+
+Two differences from the C tool, both fixes:
+
+- Writes are complete. The C tool ignored short writes.
+- Input that is still readable when stdin hangs up is passed on before exiting.
+  The C tool stopped at the hangup.
+
 ## Build
 
 ```sh
 cargo test
-KILLALL_C=/path/to/c/killall cargo test     # also compare with the C tool
+KILLALL_C=/path/to/c/killall PTY_OPEN_C=/path/to/c/pty_open cargo test   # also compare with the C tools
 
 # static musl binaries in the IDE layout (skips targets that aren't installed)
-./build-dist.sh /tmp/out    # -> /tmp/out/bin/nativeexecution/Linux-x86_64/killall, ...
+./build-dist.sh /tmp/out    # -> /tmp/out/bin/nativeexecution/Linux-x86_64/{killall,pty_open}, ...
 ```
 
 `ant build` runs `build-dist.sh` (see `../../build.xml`). The default targets are
