@@ -17,14 +17,14 @@
 
 # Throwaway remote host for the dlight/cnd remote tests (see README.md next to this file).
 # Has what remote file system, remote build and remote debug need: sshd, a C/C++
-# toolchain, gdb, make/cmake, gfortran/fpm, git/mercurial/subversion for the remote VCS modules,
+# toolchain, gdb, make/cmake, gfortran/fpm, clangd (remote code assistance), git/mercurial/subversion for the remote VCS modules,
 # and a JRE for the Java "agent" that FileOperationsTestCase runs on the remote side.
 FROM docker.io/library/debian:bookworm-slim
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         openssh-server ca-certificates \
-        build-essential gdb make cmake gfortran curl \
+        build-essential gdb make cmake gfortran curl clangd \
         git mercurial subversion \
         procps file less unzip zip \
         openjdk-17-jre-headless \
