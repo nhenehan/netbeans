@@ -19,7 +19,11 @@
 
 package org.netbeans.modules.cnd.discovery.wizard;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,37 +36,58 @@ import org.netbeans.modules.cnd.dwarfdump.exception.WrongFileFormatException;
 import org.netbeans.modules.cnd.dwarfdump.reader.ElfReader.SharedLibraries;
 import org.netbeans.modules.cnd.utils.CndPathUtilities;
 import org.netbeans.modules.cnd.utils.cache.CndFileUtils;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileSystem;
 import org.openide.util.NbBundle;
 
 /**
- * What the "from binary" wizard step needs to know about a local binary: the
- * source root (the common folder of the compilation units in its debug
- * information) and the shared libraries it links against.
+ * What the "from binary" wizard step needs to know about a binary: the source
+ * files of its compilation units, the source root (their common folder) and
+ * the shared libraries it links against. A binary on a remote file system is
+ * copied to a temporary local file first, since {@code cnd.dwarfdump} reads
+ * local files only; its source files are then looked up remotely.
  * <p>
  * A light replacement for the DWARF discovery provider of the original
  * {@code cnd.dwarfdiscovery} module; it reads the binary with
  * {@code cnd.dwarfdump} and does not configure the project.
  */
-final class BinaryArtifacts {
+public final class BinaryArtifacts {
 
     private static final Logger LOG = Logger.getLogger(BinaryArtifacts.class.getName());
 
     final List<String> dlls = new ArrayList<>();
     final List<String> searchPaths = new ArrayList<>();
     final List<String> errors = new ArrayList<>();
+    /** Absolute paths of the existing source files, on the binary's file system. */
+    private final List<String> sourceFiles = new ArrayList<>();
     String sourceRoot;
 
     private BinaryArtifacts() {
     }
 
-    static BinaryArtifacts scan(List<String> binaries) {
+    public List<String> getSourceFiles() {
+        return sourceFiles;
+    }
+
+    /**
+     * @param binaries absolute paths of the binaries
+     * @param fileSystem the file system they are on, or null for the local one
+     */
+    public static BinaryArtifacts scan(List<String> binaries, FileSystem fileSystem) {
         BinaryArtifacts result = new BinaryArtifacts();
+        boolean remote = fileSystem != null && !CndFileUtils.isLocalFileSystem(fileSystem);
         // source folder -> number of compilation units in it
         TreeMap<String, Integer> folders = new TreeMap<>();
         for (String binary : binaries) {
             Dwarf dump = null;
+            File copy = null;
             try {
-                dump = new Dwarf(binary);
+                String local = binary;
+                if (remote) {
+                    copy = copyToLocal(fileSystem, binary);
+                    local = copy.getPath();
+                }
+                dump = new Dwarf(local);
                 try {
                     Dwarf.CompilationUnitIterator iterator = dump.iteratorCompilationUnits();
                     while (iterator.hasNext()) {
@@ -71,11 +96,19 @@ final class BinaryArtifacts {
                             continue;
                         }
                         String path = cu.getSourceFileAbsolutePath();
-                        if (path == null || !CndFileUtils.isExistingFile(path)) {
+                        if (remote) {
+                            FileObject source = path == null ? null : fileSystem.findResource(path);
+                            if (source == null || !source.isData()) {
+                                continue;
+                            }
+                        } else if (path == null || !CndFileUtils.isExistingFile(path)) {
                             path = Dwarf.fileFinder(binary, path);
                             if (path == null || !CndFileUtils.isExistingFile(path)) {
                                 continue;
                             }
+                        }
+                        if (!result.sourceFiles.contains(path)) {
+                            result.sourceFiles.add(path);
                         }
                         String folder = CndPathUtilities.getDirName(path.replace('\\', '/'));
                         if (folder != null) {
@@ -83,8 +116,8 @@ final class BinaryArtifacts {
                         }
                     }
                 } catch (IOException ex) {
-                    // cnd.dwarfdump does not read DWARF 5, the default of gcc 11 and clang 14;
-                    // the wizard then proposes the binary's folder as the source root
+                    // unreadable debug information: the wizard then proposes the binary's
+                    // folder as the source root
                     LOG.log(Level.FINE, "Cannot read debug information of {0}: {1}", new Object[]{binary, ex.getMessage()}); // NOI18N
                 }
                 SharedLibraries pubNames = dump.readPubNames();
@@ -108,10 +141,28 @@ final class BinaryArtifacts {
                 if (dump != null) {
                     dump.dispose();
                 }
+                if (copy != null && !copy.delete()) {
+                    copy.deleteOnExit();
+                }
             }
         }
         result.sourceRoot = commonRoot(folders);
         return result;
+    }
+
+    private static File copyToLocal(FileSystem fileSystem, String binary) throws IOException {
+        FileObject fo = fileSystem.findResource(binary);
+        if (fo == null || !fo.isData()) {
+            throw new IOException("No such file " + binary); // NOI18N
+        }
+        File copy = File.createTempFile("cnd-binary-", "-" + fo.getNameExt()); // NOI18N
+        try (InputStream in = fo.getInputStream()) {
+            Files.copy(in, copy.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            copy.delete();
+            throw ex;
+        }
+        return copy;
     }
 
     /**

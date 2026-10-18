@@ -22,6 +22,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -31,11 +32,13 @@ import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.modules.cnd.api.remote.RemoteFileUtil;
 import org.netbeans.modules.cnd.api.toolchain.CompilerSet;
+import org.netbeans.modules.cnd.discovery.wizard.BinaryArtifacts;
 import org.netbeans.modules.cnd.makeproject.api.MakeProjectOptions;
 import org.netbeans.modules.cnd.makeproject.api.ProjectSupport;
 import org.netbeans.modules.cnd.makeproject.api.SourceFolderInfo;
 import org.netbeans.modules.cnd.makeproject.api.configurations.ConfigurationDescriptorProvider;
 import org.netbeans.modules.cnd.makeproject.api.configurations.Folder;
+import org.netbeans.modules.cnd.makeproject.api.configurations.Item.ItemFactory;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfiguration;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfigurationDescriptor;
 import org.netbeans.modules.cnd.makeproject.api.ui.wizard.WizardConstants;
@@ -72,6 +75,7 @@ public final class ImportExecutable implements PropertyChangeListener {
     private final Map<String, Object> map;
     private Project lastSelectedProject;
     private String sourcesPath;
+    private List<String> buildSources = Collections.emptyList();
     private boolean addSourceRoot;
 
     public ImportExecutable(Map<String, Object> map, Project lastSelectedProject) {
@@ -204,7 +208,9 @@ public final class ImportExecutable implements PropertyChangeListener {
             });
             prjParams.setSourceFolders(list.iterator());
         } else {
+            // "sources used in the build": the compilation units of the binary
             addSourceRoot = true;
+            buildSources = BinaryArtifacts.scan(Collections.singletonList(binaryPath), fullRemotefileSystem).getSourceFiles();
         }
         prjParams.setSourceFoldersFilter(MakeConfigurationDescriptor.DEFAULT_IGNORE_FOLDERS_PATTERN_EXISTING_PROJECT);
         try {
@@ -233,6 +239,25 @@ public final class ImportExecutable implements PropertyChangeListener {
         }
     }
 
+    /**
+     * Adds the source files named in the binary's debug information to the
+     * Source Files folder (the original module did this through the code
+     * model).
+     */
+    private void addBuildSources(MakeConfigurationDescriptor configurationDescriptor) {
+        Folder sourceFiles = configurationDescriptor.getLogicalFolders().findFolderByName(MakeConfigurationDescriptor.SOURCE_FILES_FOLDER);
+        if (sourceFiles == null || buildSources.isEmpty()) {
+            return;
+        }
+        for (String path : buildSources) {
+            String itemPath = ProjectSupport.toProperPath(configurationDescriptor.getBaseDirFileObject(), path, lastSelectedProject);
+            itemPath = CndPathUtilities.normalizeSlashes(itemPath);
+            if (configurationDescriptor.findProjectItemByPath(itemPath) == null) {
+                sourceFiles.addItemAction(ItemFactory.getDefault().createInFileSystem(configurationDescriptor.getBaseDirFileSystem(), itemPath));
+            }
+        }
+    }
+
     private void process() {
         ProgressHandle progress = ProgressHandle.createHandle(NbBundle.getMessage(ImportExecutable.class, "ImportExecutable.Progress")); // NOI18N
         progress.start();
@@ -251,6 +276,7 @@ public final class ImportExecutable implements PropertyChangeListener {
             if (addSourceRoot && sourcesPath != null && sourcesPath.length() > 1) {
                 configurationDescriptor.addSourceRoot(sourcesPath);
             }
+            addBuildSources(configurationDescriptor);
             configurationDescriptor.setModified();
             configurationDescriptor.save();
         } catch (Throwable ex) {

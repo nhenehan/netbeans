@@ -21,7 +21,6 @@ package org.netbeans.modules.cnd.discovery.wizard;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,14 +83,8 @@ public class DiscoveryExtension implements IteratorExtension {
             }
         }
         String binaryFolder = CndPathUtilities.getDirName(binaries.get(0));
-        if (WizardConstants.DISCOVERY_BINARY_FILESYSTEM.fromMap(map) != null) {
-            // cnd.dwarfdump reads local files only
-            WizardConstants.DISCOVERY_ROOT_FOLDER.toMap(map, binaryFolder);
-            WizardConstants.DISCOVERY_BINARY_DEPENDENCIES.toMap(map, Collections.<String>emptyList());
-            WizardConstants.DISCOVERY_BINARY_SEARCH_PATH.toMap(map, Collections.<String>emptyList());
-            return;
-        }
-        BinaryArtifacts artifacts = BinaryArtifacts.scan(binaries);
+        // null for local binaries; remote ones are copied for reading
+        BinaryArtifacts artifacts = BinaryArtifacts.scan(binaries, WizardConstants.DISCOVERY_BINARY_FILESYSTEM.fromMap(map));
         WizardConstants.DISCOVERY_ROOT_FOLDER.toMap(map, artifacts.sourceRoot != null ? artifacts.sourceRoot : binaryFolder);
         WizardConstants.DISCOVERY_BINARY_DEPENDENCIES.toMap(map, artifacts.dlls);
         WizardConstants.DISCOVERY_BINARY_SEARCH_PATH.toMap(map, artifacts.searchPaths);
