@@ -18,38 +18,63 @@
  */
 package org.netbeans.modules.cnd.discovery.projectimport;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.Future;
+import java.util.function.IntConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.netbeans.api.project.Project;
+import org.netbeans.api.project.ui.OpenProjects;
+import org.netbeans.modules.cnd.actions.CMakeAction;
+import org.netbeans.modules.cnd.actions.QMakeAction;
+import org.netbeans.modules.cnd.actions.ShellRunAction;
 import org.netbeans.modules.cnd.api.remote.RemoteFileUtil;
 import org.netbeans.modules.cnd.api.remote.ServerList;
 import org.netbeans.modules.cnd.api.toolchain.CompilerSet;
 import org.netbeans.modules.cnd.api.toolchain.CompilerSetManager;
+import org.netbeans.modules.cnd.api.utils.ImportUtils;
+import org.netbeans.modules.cnd.builds.CMakeExecSupport;
+import org.netbeans.modules.cnd.builds.QMakeExecSupport;
+import org.netbeans.modules.cnd.execution.ShellExecSupport;
 import org.netbeans.modules.cnd.makeproject.api.MakeArtifact;
 import org.netbeans.modules.cnd.makeproject.api.MakeProjectOptions;
 import org.netbeans.modules.cnd.makeproject.api.ProjectSupport;
 import org.netbeans.modules.cnd.makeproject.api.SourceFolderInfo;
+import org.netbeans.modules.cnd.makeproject.api.configurations.ConfigurationDescriptorProvider;
+import org.netbeans.modules.cnd.makeproject.api.configurations.Folder;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfiguration;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfigurationDescriptor;
 import org.netbeans.modules.cnd.makeproject.api.ui.wizard.WizardConstants;
+import org.netbeans.modules.cnd.makeproject.api.wizards.PreBuildSupport;
 import org.netbeans.modules.cnd.makeproject.api.wizards.ProjectGenerator;
+import org.netbeans.modules.cnd.remote.api.RfsListenerSupport;
 import org.netbeans.modules.cnd.utils.CndPathUtilities;
 import org.netbeans.modules.cnd.utils.FSPath;
+import org.netbeans.modules.cnd.utils.MIMENames;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironmentFactory;
+import org.netbeans.modules.nativeexecution.api.ExecutionListener;
 import org.netbeans.modules.remote.spi.FileSystemProvider;
 import org.openide.WizardDescriptor;
 import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.loaders.DataObject;
+import org.openide.nodes.Node;
+import org.openide.util.Exceptions;
+import org.openide.util.NbBundle;
+import org.openide.util.RequestProcessor;
 
 /**
  * Creates a MakeProject from an existing sources wizard.
@@ -59,11 +84,11 @@ import org.openide.filesystems.FileObject;
  * kept, except that the selected source folders are now handed to the project
  * generator directly.
  * <p>
- * The post-creation pipeline of the original class ({@code doWork()}: running
- * configure/make, DWARF and build-log analysis, code model tuning) is
- * <b>not</b> included, because it depends on modules that are outside of this
- * distribution ({@code cnd.model.api}, {@code cnd.builds}, {@code cnd.execution}
- * and the {@code cnd.discovery.api} provider SPI).
+ * After the project opens, the configure, clean and build steps selected in the
+ * wizard run as in the original class. Analysing their output to configure
+ * code assistance (DWARF and build-log discovery, code model tuning) is
+ * <b>not</b> included; it depends on modules outside of this distribution
+ * ({@code cnd.model.api}, the {@code cnd.discovery.api} provider SPI).
  * <p>
  * Original source: {@code contrib/cnd.discovery/src/.../projectimport/ImportProject.java}
  * of the Apache NetBeans repository (commit d84e125315). Trimmed by Piotr Hoppe
@@ -75,6 +100,7 @@ public class ImportProject {
     private static final String CLEAN_COMMAND = MakeArtifact.MAKE_MACRO + " -f Makefile clean";  // NOI18N
     static final boolean TRACE = Boolean.getBoolean("cnd.discovery.trace.projectimport"); // NOI18N
     public static final Logger logger;
+    private static final RequestProcessor RP = new RequestProcessor(ImportProject.class.getName(), 1);
 
     static {
         logger = Logger.getLogger("org.netbeans.modules.cnd.discovery.projectimport.ImportProject"); // NOI18N
@@ -355,7 +381,227 @@ public class ImportProject {
         FileObject dir = projectFolder.getFileObject();
         importResult.put(Step.Project, State.Successful);
         resultSet.add(dir);
+        if (runConfigure || runMake) {
+            // the wizard opens the project after create() returns
+            OpenProjects.getDefault().addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if (OpenProjects.PROPERTY_OPEN_PROJECTS.equals(evt.getPropertyName())
+                            && OpenProjects.getDefault().isProjectOpen(makeProject)) {
+                        OpenProjects.getDefault().removePropertyChangeListener(this);
+                        RP.post(ImportProject.this::configureAndBuild);
+                    }
+                }
+            });
+        }
         return resultSet;
+    }
+
+    /**
+     * Runs the configure step and the clean and build steps that were selected
+     * in the wizard, each in its own output tab. The original module also
+     * analysed the build output to configure code assistance; here clangd
+     * reads compile_commands.json, which CMake writes into the build folder.
+     */
+    private void configureAndBuild() {
+        boolean hasConfigure = configureFileObject != null && configureFileObject.isValid()
+                || configureCommand != null && !configureCommand.isEmpty();
+        if (runConfigure && hasConfigure) {
+            configure(rc -> {
+                importResult.put(Step.Configure, rc == 0 ? State.Successful : State.Fail);
+                if (rc == 0 && runMake) {
+                    cleanAndBuild();
+                } else {
+                    importResult.put(Step.MakeClean, State.Skiped);
+                    importResult.put(Step.Make, State.Skiped);
+                    refreshSourceFolders();
+                }
+            });
+        } else if (runMake) {
+            importResult.put(Step.Configure, State.Skiped);
+            cleanAndBuild();
+        }
+    }
+
+    private void configure(IntConsumer onFinish) {
+        ExecutionListener listener = new DownloadingListener(onFinish);
+        try {
+            if (configureFileObject != null && configureFileObject.isValid()) {
+                Node node = DataObject.find(configureFileObject).getNodeDelegate();
+                if (runConfigureScript(node, listener) != null) {
+                    return;
+                }
+                logger.log(Level.INFO, "Cannot run configure script {0}", configureFileObject); // NOI18N
+            } else {
+                String runFolder = configureRunFolder != null && !configureRunFolder.isEmpty() ? configureRunFolder : workingDir;
+                ExecuteCommand ec = new ExecuteCommand(makeProject, runFolder, configureCommand);
+                setTabName(ec, "CONFIGURE_LABEL", "CONFIGURE_REMOTE_LABEL"); // NOI18N
+                if (ec.performAction(listener, null, null) != null) {
+                    return;
+                }
+                logger.log(Level.INFO, "Cannot execute configure command {0}", configureCommand); // NOI18N
+            }
+        } catch (Throwable ex) {
+            logger.log(Level.INFO, "Cannot configure project", ex); // NOI18N
+        }
+        onFinish.accept(-1);
+    }
+
+    private Future<Integer> runConfigureScript(Node node, ExecutionListener listener) throws IOException {
+        String mime = FileUtil.getMIMEType(configureFileObject);
+        FileObject runFolder = configureFileObject.getParent();
+        if (configureRunFolder != null) {
+            FileObject created = mkDir(runFolder, CndPathUtilities.toRelativePath(runFolder, configureRunFolder));
+            if (created != null) {
+                runFolder = created;
+            }
+        }
+        String args = configureArguments == null ? null
+                : PreBuildSupport.expandMacros(configureArguments, toolchain, new HashMap<>());
+        if (MIMENames.SHELL_MIME_TYPE.equals(mime)) {
+            ShellExecSupport ses = node.getLookup().lookup(ShellExecSupport.class);
+            if (args != null) {
+                // keep user arguments as is in args[0], duplicate configure variables in environment
+                ses.setArguments(new String[]{args});
+                List<String> vars = ImportUtils.parseEnvironment(args);
+                ses.setEnvironmentVariables(vars.toArray(new String[vars.size()]));
+            }
+            ses.setRunDirectory(runFolder.getPath());
+            return ShellRunAction.performAction(node, listener, null, makeProject, null);
+        } else if (MIMENames.CMAKE_MIME_TYPE.equals(mime)) {
+            CMakeExecSupport ses = node.getLookup().lookup(CMakeExecSupport.class);
+            if (args != null) {
+                // move configure variables from the arguments to the environment
+                List<String> vars = ImportUtils.parseEnvironment(args);
+                for (String s : ImportUtils.quoteList(vars)) {
+                    int i = args.indexOf(s);
+                    if (i >= 0) {
+                        args = args.substring(0, i) + args.substring(i + s.length());
+                    }
+                }
+                ses.setArguments(new String[]{args});
+                ses.setEnvironmentVariables(vars.toArray(new String[vars.size()]));
+            }
+            ses.setRunDirectory(runFolder.getPath());
+            return CMakeAction.performAction(node, listener, null, makeProject, null);
+        } else if (MIMENames.QTPROJECT_MIME_TYPE.equals(mime)) {
+            QMakeExecSupport ses = node.getLookup().lookup(QMakeExecSupport.class);
+            if (args != null) {
+                ses.setArguments(new String[]{args});
+            }
+            ses.setRunDirectory(runFolder.getPath());
+            return QMakeAction.performAction(node, listener, null, makeProject, null);
+        }
+        return null;
+    }
+
+    private void cleanAndBuild() {
+        ExecuteCommand clean = new ExecuteCommand(makeProject, workingDir, cleanCommand);
+        setTabName(clean, "CLEAN_LABEL", "CLEAN_REMOTE_LABEL"); // NOI18N
+        Future<Integer> task = clean.performAction(new DownloadingListener(rc -> {
+            importResult.put(Step.MakeClean, rc == 0 ? State.Successful : State.Fail);
+            build();
+        }), null, null);
+        if (task == null) {
+            logger.log(Level.INFO, "Cannot execute clean command {0}", cleanCommand); // NOI18N
+            importResult.put(Step.MakeClean, State.Fail);
+            build();
+        }
+    }
+
+    private void build() {
+        List<String> vars = configureArguments == null ? new ArrayList<>()
+                : ImportUtils.parseEnvironment(PreBuildSupport.expandMacros(configureArguments, toolchain, new HashMap<>()));
+        ExecuteCommand ec = new ExecuteCommand(makeProject, workingDir, buildCommand);
+        setTabName(ec, "BUILD_LABEL", "BUILD_REMOTE_LABEL"); // NOI18N
+        Future<Integer> task = ec.performAction(new DownloadingListener(rc -> {
+            importResult.put(Step.Make, rc == 0 ? State.Successful : State.Fail);
+            refreshSourceFolders();
+        }), null, vars);
+        if (task == null) {
+            logger.log(Level.INFO, "Cannot execute build command {0}", buildCommand); // NOI18N
+            importResult.put(Step.Make, State.Fail);
+        }
+    }
+
+    private void setTabName(ExecuteCommand ec, String localKey, String remoteKey) {
+        String name = NbBundle.getMessage(ImportProject.class, localKey);
+        String tabName = ec.getExecutionEnvironment().isLocal() ? name
+                : NbBundle.getMessage(ImportProject.class, remoteKey, ec.getExecutionEnvironment().getDisplayName());
+        ec.setName(name, tabName);
+    }
+
+    /** Shows the files that configure and build created. */
+    private void refreshSourceFolders() {
+        RP.post(() -> {
+            ConfigurationDescriptorProvider provider = makeProject.getLookup().lookup(ConfigurationDescriptorProvider.class);
+            MakeConfigurationDescriptor descriptor = provider == null ? null : provider.getConfigurationDescriptor();
+            if (descriptor == null) {
+                return;
+            }
+            for (Folder sub : descriptor.getLogicalFolders().getFolders()) {
+                if (sub.isDiskFolder()) {
+                    sub.forceDiskFolderRefreshAndWait();
+                    sub.refreshDiskFolder(null);
+                }
+            }
+        });
+    }
+
+    private FileObject mkDir(FileObject parent, String relative) {
+        if (relative == null) {
+            return null;
+        }
+        try {
+            for (String segment : relative.replace('\\', '/').split("/")) { // NOI18N
+                if (parent == null) {
+                    return null;
+                }
+                if (segment.isEmpty() || ".".equals(segment)) { // NOI18N
+                    continue;
+                } else if ("..".equals(segment)) { // NOI18N
+                    parent = parent.getParent();
+                } else {
+                    FileObject test = parent.getFileObject(segment, null);
+                    parent = test != null ? test : parent.createFolder(segment);
+                }
+            }
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            return null;
+        }
+        return parent;
+    }
+
+    /**
+     * Passes the exit code on, and for a remote build host with local sources
+     * downloads the files the command created on the host.
+     */
+    private final class DownloadingListener implements ExecutionListener {
+
+        private final IntConsumer onFinish;
+        private RfsListenerImpl rfsListener;
+
+        DownloadingListener(IntConsumer onFinish) {
+            this.onFinish = onFinish;
+        }
+
+        @Override
+        public void executionStarted(int pid) {
+            if (executionEnvironment.isRemote() && !isFullRemoteProject) {
+                rfsListener = new RfsListenerImpl(executionEnvironment);
+                RfsListenerSupport.addListener(executionEnvironment, rfsListener);
+            }
+        }
+
+        @Override
+        public void executionFinished(int rc) {
+            if (rfsListener != null) {
+                rfsListener.download();
+                RfsListenerSupport.removeListener(executionEnvironment, rfsListener);
+            }
+            onFinish.accept(rc);
+        }
     }
 
     /**
