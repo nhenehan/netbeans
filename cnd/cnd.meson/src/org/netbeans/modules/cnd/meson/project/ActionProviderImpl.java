@@ -215,7 +215,10 @@ public class ActionProviderImpl implements ActionProvider {
          */
         public static void main(String[] args) throws Exception {
             for (List<String> command : Utils.decode(args[0])) {
-                int result = new ProcessBuilder(command).inheritIO().start().waitFor();
+                ProcessBuilder builder = new ProcessBuilder(command).inheritIO();
+                // meson is Python: unbuffered output keeps its lines in order with ninja's
+                builder.environment().put("PYTHONUNBUFFERED", "1"); //NOI18N
+                int result = builder.start().waitFor();
                 if (result != 0) {
                     System.exit(result);
                 }
