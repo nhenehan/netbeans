@@ -36,16 +36,10 @@ import org.openide.modules.InstalledFileLocator;
 public class NbStartUtility extends HelperUtility {
 
     private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("enable.nbstart", "true")); // NOI18N
-    /**
-     * Development only, while the Rust port of pty is checked against the C
-     * one: -Dnativeexecution.nbstart.name=pty.c runs the C build (shipped for
-     * Linux-x86_64 only). To be removed together with pty.c.
-     */
-    private static final String NAME = "pty.c".equals(System.getProperty("nativeexecution.nbstart.name")) ? "pty.c" : "pty"; // NOI18N
     private static final NbStartUtility instance = new NbStartUtility();
 
     public NbStartUtility() {
-        super("bin/nativeexecution/${osname}-${platform}${_isa}/" + NAME); // NOI18N
+        super("bin/nativeexecution/${osname}-${platform}${_isa}/pty"); // NOI18N
     }
 
     public static NbStartUtility getInstance() {
@@ -65,7 +59,7 @@ public class NbStartUtility extends HelperUtility {
         // use MacroExpander here (the same is for parent methods)
         InstalledFileLocator fl = InstalledFileLocatorProvider.getDefault();
         StringBuilder path = new StringBuilder("bin/nativeexecution/"); // NOI18N
-        path.append(osname).append('-').append(platform).append(bitness).append('/').append(NAME); // NOI18N
+        path.append(osname).append('-').append(platform).append(bitness).append("/pty"); // NOI18N
 
         File file = fl.locate(path.toString(), codeNameBase, false);
 
