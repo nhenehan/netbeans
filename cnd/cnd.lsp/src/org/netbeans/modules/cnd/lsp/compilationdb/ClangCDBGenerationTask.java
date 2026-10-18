@@ -20,8 +20,10 @@ package org.netbeans.modules.cnd.lsp.compilationdb;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
@@ -53,6 +55,7 @@ import org.netbeans.modules.cnd.makeproject.api.configurations.Item;
 import org.netbeans.modules.cnd.makeproject.api.configurations.ItemConfiguration;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfiguration;
 import org.netbeans.modules.cnd.makeproject.api.configurations.MakeConfigurationDescriptor;
+import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.Cancellable;
 
@@ -89,10 +92,6 @@ final class ClangCDBGenerationTask implements Callable<Void>, Cancellable {
         nativeProject = makeProject.getLookup().lookup(NativeProject.class);
         if (nativeProject == null) {
             throw new IllegalArgumentException("No native project found");
-        }
-
-        if (makeProject.getDevelopmentHost() != null && !makeProject.getDevelopmentHost().isLocal()) {
-            throw new IllegalArgumentException("Not a local project");
         }
 
         activeMakeConfiguration = makeProject.getActiveConfiguration();
@@ -151,7 +150,14 @@ final class ClangCDBGenerationTask implements Callable<Void>, Cancellable {
         ArrayList<ClangCDBGenerationCause> coalescedCauses = new ArrayList<>(pendingCauses.size());
         pendingCauses.drainTo(coalescedCauses);
 
-        File projectDirectory = FileUtil.toFile(makeProject.getProjectDirectory());
+        FileObject projectDirectoryFO = makeProject.getProjectDirectory();
+        File projectDirectory = FileUtil.toFile(projectDirectoryFO);
+        if (projectDirectory == null) {
+            // full remote project: the database goes to the remote project
+            // directory, for the clangd running on that host
+            updateRemoteCompilationDatabase(projectDirectoryFO, coalescedCauses);
+            return;
+        }
         File compilationDatabase = new File(projectDirectory, CDB_NAME);
         LOG.log(Level.FINE, "Updating compilation database {0} because {1}",
                 new Object[]{compilationDatabase.getPath(), coalescedCauses.toString()});
@@ -198,6 +204,45 @@ final class ClangCDBGenerationTask implements Callable<Void>, Cancellable {
         long endTime = System.currentTimeMillis();
         LOG.log(Level.INFO, "Regeneration of {0} took {1} ms.", new Object[]{
             compilationDatabase.getAbsolutePath(),
+            endTime - startTime
+        });
+    }
+
+    private void updateRemoteCompilationDatabase(FileObject projectDirectory,
+            ArrayList<ClangCDBGenerationCause> coalescedCauses) throws Exception {
+        LOG.log(Level.FINE, "Updating compilation database {0}/{1} because {2}",
+                new Object[]{projectDirectory.getPath(), CDB_NAME, coalescedCauses.toString()});
+
+        Item[] items = makeConfigurationDescriptor.getProjectItems();
+        if (items == null || items.length == 0) {
+            LOG.log(Level.FINE, "No items in project.");
+            return;
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        // Build it in memory first: the remote file is written in one go,
+        // and only if all items were processed.
+        StringWriter content = new StringWriter();
+        PkgConfig pkgConfig = new PkgConfig(makeProject.getDevelopmentHost());
+        try (PrintWriter writer = new PrintWriter(content)) {
+            writeCompilationDatabase(writer, null, pkgConfig, items);
+        }
+        if (cancelled) {
+            return;
+        }
+
+        FileObject compilationDatabase = projectDirectory.getFileObject(CDB_NAME);
+        if (compilationDatabase == null) {
+            compilationDatabase = projectDirectory.createData(CDB_NAME);
+        }
+        try (OutputStream out = compilationDatabase.getOutputStream()) {
+            out.write(content.toString().getBytes(StandardCharsets.UTF_8));
+        }
+
+        long endTime = System.currentTimeMillis();
+        LOG.log(Level.INFO, "Regeneration of {0} took {1} ms.", new Object[]{
+            compilationDatabase.getPath(),
             endTime - startTime
         });
     }

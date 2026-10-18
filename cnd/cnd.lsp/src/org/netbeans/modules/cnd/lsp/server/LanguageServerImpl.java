@@ -34,7 +34,8 @@ import org.netbeans.modules.cnd.utils.MIMENames;
 import org.netbeans.modules.lsp.client.spi.LanguageServerProvider;
 import org.netbeans.modules.lsp.client.spi.MultiMimeLanguageServerProvider;
 import org.netbeans.modules.lsp.client.spi.ServerRestarter;
-import org.openide.filesystems.FileUtil;
+import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
+import org.netbeans.modules.nativeexecution.api.util.ConnectionManager;
 import org.openide.util.Lookup;
 import org.openide.util.Pair;
 
@@ -67,13 +68,6 @@ public class LanguageServerImpl implements MultiMimeLanguageServerProvider {
             return null;
         }
 
-        // clangd runs locally and only accepts file: URIs, so it cannot serve
-        // full remote projects (their files live on the remote file system)
-        if (FileUtil.toFile(project.getProjectDirectory()) == null) {
-            LOG.log(Level.FINE, "Not starting clangd for remote project {0}", project.getProjectDirectory());
-            return null;
-        }
-
         this.serverRestarter = lookup.lookup(ServerRestarter.class);
         if (serverRestarter == null) {
             LOG.log(Level.INFO, "Cannot restart LSP server because Project {0} has no SererRestarter", project.getProjectDirectory().toString());
@@ -88,7 +82,8 @@ public class LanguageServerImpl implements MultiMimeLanguageServerProvider {
             return null;
         }
 
-        ClangdProcess clangd = ClangdProcess.getInstance();
+        // full remote projects get the clangd of their host
+        ClangdProcess clangd = ClangdProcess.forProject(project);
 
         if (clangd.getState() == LSPServerState.RUNNING) {
             return clangd.getLanguageServerDescription();
@@ -96,7 +91,11 @@ public class LanguageServerImpl implements MultiMimeLanguageServerProvider {
             try {
                 clangd.start(serverRestarter);
             } catch (IOException ex) {
-                LOG.log(Level.SEVERE, "Failed to start clangd for project {0}", project.getProjectDirectory().toString());
+                // a remote host that is not connected yet is expected while
+                // the IDE starts; the bindings ask again once it is
+                ExecutionEnvironment env = clangd.getExecutionEnvironment();
+                Level level = env.isRemote() && !ConnectionManager.getInstance().isConnectedTo(env) ? Level.INFO : Level.SEVERE;
+                LOG.log(level, "Failed to start clangd for project {0}: {1}", new Object[]{project.getProjectDirectory().toString(), ex.getMessage()});
                 return null;
             }
         }

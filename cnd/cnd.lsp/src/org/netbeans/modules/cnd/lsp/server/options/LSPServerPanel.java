@@ -430,7 +430,7 @@ final class LSPServerPanel extends javax.swing.JPanel {
         ClangdOptions.save(options);
 
         LOG.log(Level.INFO, "Restarting clangd...");
-        ClangdProcess.getInstance().restart();
+        ClangdProcess.restartAll();
     }
 
     boolean valid() {

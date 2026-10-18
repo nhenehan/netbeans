@@ -49,12 +49,12 @@ public class LSPServerSupport
 
         @Override
         protected void projectOpened() {
-            ClangdProcess.getInstance().addPropertyChangeListener(support);
+            support.getClangdProcess().addPropertyChangeListener(support);
         }
 
         @Override
         protected void projectClosed() {
-            ClangdProcess.getInstance().removePropertyChangeListener(support);
+            support.getClangdProcess().removePropertyChangeListener(support);
         }
 
     }
@@ -64,12 +64,23 @@ public class LSPServerSupport
      */
     public static final String PROP_CLANGD_PROCESS_STATE = "clangd.state"; // NOI18N
 
+    private final MakeProject owner;
     private final SwingPropertyChangeSupport propertyChangeSupport;
     private final LSPServerSupportOpenedHook openedHook;
 
     public LSPServerSupport(MakeProject owner) {
+        this.owner = owner;
         this.propertyChangeSupport = new SwingPropertyChangeSupport(this, true);
         this.openedHook = new LSPServerSupportOpenedHook(this);
+    }
+
+    /**
+     * The clangd of the host the project's files live on.
+     *
+     * @return The ClangdProcess of the project.
+     */
+    public ClangdProcess getClangdProcess() {
+        return ClangdProcess.forProject(owner);
     }
 
     public ProjectOpenedHook getOpenedHook() {
@@ -79,7 +90,7 @@ public class LSPServerSupport
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         Object source = evt.getSource();
-        if (ClangdProcess.getInstance().equals(evt.getSource())) {
+        if (getClangdProcess().equals(evt.getSource())) {
             propertyChangeSupport.firePropertyChange(PROP_CLANGD_PROCESS_STATE,
                     evt.getOldValue(),
                     evt.getNewValue());

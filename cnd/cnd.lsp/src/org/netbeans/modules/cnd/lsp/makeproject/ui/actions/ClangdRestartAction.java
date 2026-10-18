@@ -18,6 +18,7 @@
  */
 package org.netbeans.modules.cnd.lsp.makeproject.ui.actions;
 
+import org.netbeans.api.project.Project;
 import org.netbeans.modules.cnd.lsp.server.ClangdProcess;
 import org.netbeans.modules.cnd.lsp.server.LSPServerState;
 import org.openide.nodes.Node;
@@ -38,17 +39,19 @@ public class ClangdRestartAction extends NodeAction {
 
     @Override
     protected void performAction(Node[] activatedNodes) {
-        if (activatedNodes != null && activatedNodes.length > 0) {
-            ClangdProcess.getInstance().restart();
+        ClangdProcess clangd = getClangdProcess(activatedNodes);
+        if (clangd != null) {
+            clangd.restart();
         }
     }
 
     @Override
     protected boolean enable(Node[] activatedNodes) {
-        if (activatedNodes == null || activatedNodes.length == 0) {
+        ClangdProcess clangd = getClangdProcess(activatedNodes);
+        if (clangd == null) {
             return false;
         }
-        LSPServerState clangdState = ClangdProcess.getInstance().getState();
+        LSPServerState clangdState = clangd.getState();
         switch (clangdState) {
             case RUNNING:
             case ERROR:
@@ -56,6 +59,14 @@ public class ClangdRestartAction extends NodeAction {
             default:
                 return false;
         }
+    }
+
+    private static ClangdProcess getClangdProcess(Node[] activatedNodes) {
+        if (activatedNodes == null || activatedNodes.length == 0) {
+            return null;
+        }
+        Project project = activatedNodes[0].getLookup().lookup(Project.class);
+        return project == null ? ClangdProcess.getInstance() : ClangdProcess.forProject(project);
     }
 
     @Override

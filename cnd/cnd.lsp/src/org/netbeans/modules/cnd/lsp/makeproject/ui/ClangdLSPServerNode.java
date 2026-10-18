@@ -56,6 +56,8 @@ public class ClangdLSPServerNode extends AbstractNode implements PropertyChangeL
         super(Children.LEAF, new AbstractLookup(instanceContent));
         this.project = project;
         this.lspServerSupport = project.getLookup().lookup(LSPServerSupport.class);
+        // the actions find the project's clangd through the node's lookup
+        instanceContent.add(project);
         this.lspServerSupport.addPropertyChangeListener(this);
     }
 
@@ -67,14 +69,14 @@ public class ClangdLSPServerNode extends AbstractNode implements PropertyChangeL
     @Override
     public String getDisplayName() {
         String displayName = NbBundle.getMessage(LSPServersNode.class, "ClangdLSPServerNode.displayName"); // NOI18N
-        LSPServerState state = ClangdProcess.getInstance().getState();
+        LSPServerState state = lspServerSupport.getClangdProcess().getState();
         return String.format("%s (%s)", displayName, state.getDisplayName()); // NOI18N
     }
 
     @Override
     public Image getIcon(int type) {
         Image clangd = ImageUtilities.loadImage("org/netbeans/modules/cnd/lsp/makeproject/ui/resources/clangd.llvm.org.png"); // NOI18N
-        LSPServerState state = ClangdProcess.getInstance().getState();
+        LSPServerState state = lspServerSupport.getClangdProcess().getState();
         Image stateBadge = state.getBadge();
         return ImageUtilities.mergeImages(clangd, stateBadge, 0, 0);
     }
@@ -121,7 +123,7 @@ public class ClangdLSPServerNode extends AbstractNode implements PropertyChangeL
             @Override
             public String getValue()
                     throws IllegalAccessException, InvocationTargetException {
-                LSPServerState state = ClangdProcess.getInstance().getState();
+                LSPServerState state = lspServerSupport.getClangdProcess().getState();
                 return state.getDisplayName();
             }
         };
@@ -137,7 +139,7 @@ public class ClangdLSPServerNode extends AbstractNode implements PropertyChangeL
             @Override
             public String getValue()
                     throws IllegalAccessException, InvocationTargetException {
-                String [] commands = ClangdProcess.getInstance().getCommands();
+                String [] commands = lspServerSupport.getClangdProcess().getCommands();
                 return String.join(" ", commands);
             }
         };

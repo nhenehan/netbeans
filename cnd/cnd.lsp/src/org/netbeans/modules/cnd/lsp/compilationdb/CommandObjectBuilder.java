@@ -18,13 +18,14 @@
  */
 package org.netbeans.modules.cnd.lsp.compilationdb;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 import org.netbeans.api.project.Project;
+import org.netbeans.modules.cnd.utils.CndPathUtilities;
 import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
 
 /**
  * CommandObjectBuilder builds a JSONObject representing a CommandObject as
@@ -67,7 +68,7 @@ final class CommandObjectBuilder {
      * @return this
      */
     CommandObjectBuilder setFile(String file) {
-        this.file = Paths.get(file).toAbsolutePath().toString();
+        this.file = CndPathUtilities.toAbsolutePath(project.getProjectDirectory(), file);
         return this;
     }
 
@@ -80,7 +81,7 @@ final class CommandObjectBuilder {
      * @return this.
      */
     CommandObjectBuilder setOutput(String output) {
-        this.output = Paths.get(output).toAbsolutePath().toString();
+        this.output = CndPathUtilities.toAbsolutePath(project.getProjectDirectory(), output);
         return this;
     }
 
@@ -108,11 +109,12 @@ final class CommandObjectBuilder {
         JSONObject object = new JSONObject();
 
         // directory
+        // (a path on the remote host for full remote projects)
         FileObject projectDirectory = project.getProjectDirectory();
-        Path directory = Paths.get(projectDirectory.toURI());
-        directory = directory.toAbsolutePath();
-        LOG.log(Level.FINE, "Directory {0}", directory.toString());
-        object.put("directory", directory.toString());
+        File localDirectory = FileUtil.toFile(projectDirectory);
+        String directory = localDirectory != null ? localDirectory.getAbsolutePath() : projectDirectory.getPath();
+        LOG.log(Level.FINE, "Directory {0}", directory);
+        object.put("directory", directory);
 
         // file
         LOG.log(Level.FINE, "File {0}", file);
