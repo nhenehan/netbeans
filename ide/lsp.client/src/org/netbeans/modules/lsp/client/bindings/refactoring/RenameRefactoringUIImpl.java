@@ -97,7 +97,9 @@ public class RenameRefactoringUIImpl implements RefactoringUI {
     public Problem setParameters() {
         params.setTextDocument(new TextDocumentIdentifier(Utils.toURI(file)));
         params.setPosition(position);
-        params.setNewName(panel.getName());
+        // a name typed into the dialog may carry stray whitespace, which no
+        // server accepts in an identifier
+        params.setNewName(panel.getName().trim());
         return null;
     }
 

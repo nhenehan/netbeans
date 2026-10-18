@@ -110,6 +110,31 @@ public class RefactoringActionsProvider extends ActionsImplementationProvider{
         SwingUtilities.invokeLater(start);
     }
 
+    /**
+     * The text of the token at the caret, looking into embedded languages.
+     * With the caret right after a word (e.g. after a right click at its
+     * end) the token at the caret is the following whitespace, so the word
+     * before it is used.
+     */
+    static String tokenTextAt(TokenSequence<?> ts, int offset) {
+        ts.move(offset);
+        if (!ts.moveNext() && !ts.movePrevious()) {
+            return "";
+        }
+        if (ts.token().text().toString().trim().isEmpty() && ts.offset() == offset) {
+            // caret at the end of the previous token; stays put if there is none
+            ts.movePrevious();
+        }
+        TokenSequence<?> embedded = ts.embedded();
+        if (embedded != null) {
+            String text = tokenTextAt(embedded, offset);
+            if (!text.isEmpty()) {
+                return text;
+            }
+        }
+        return ts.token().text().toString().trim();
+    }
+
     @Override
     public void doRename(Lookup lookup) {
         Runnable start = () -> {
@@ -134,13 +159,7 @@ public class RefactoringActionsProvider extends ActionsImplementationProvider{
                     }
                     try {
                         TokenSequence<?> ts = TokenHierarchy.get(doc).tokenSequence();
-                        name = "";
-                        if (ts != null) {
-                            ts.move(caretPos);
-                            if (ts.moveNext()) {
-                                name = ts.token().text().toString();
-                            }
-                        }
+                        name = ts != null ? tokenTextAt(ts, caretPos) : "";
                     } finally {
                         if (abstractDoc != null) {
                             abstractDoc.readUnlock();
