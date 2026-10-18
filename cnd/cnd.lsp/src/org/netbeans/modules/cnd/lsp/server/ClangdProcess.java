@@ -113,6 +113,11 @@ public final class ClangdProcess {
         if (this.process != null && this.process.isAlive() && serverRestarter != null) {
             fireStateChange(LSPServerState.STOPPED);
             serverRestarter.restart();
+            // The restarter only shuts down the bindings of the project it
+            // was created for, so make sure the old clangd does not linger
+            if (this.process.isAlive()) {
+                this.process.destroy();
+            }
         }
         ClangdOptions options = ClangdOptions.load();
         if (options.isMisconfigured()) {

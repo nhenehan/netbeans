@@ -302,25 +302,9 @@ final class LSPServerPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, message);
             return;
         }
-        String[] parts = PATH.split(File.pathSeparator);
-        File clangd = null;
-
-        for (String part : parts) {
-            File directory = new File(part);
-            File unix = new File(directory, "clangd");
-            if (unix.exists() && unix.isFile() && unix.canExecute()) {
-                clangd = unix;
-                break;
-            }
-            File windows = new File(directory, "clangd.exe");
-            if (windows.exists() && windows.isFile() && windows.canExecute()) {
-                clangd = windows;
-                break;
-            }
-        }
+        File clangd = ClangdOptions.findOnPath();
         controller.changed();
         txtInstallPath.setText(clangd == null ? "" : clangd.getAbsolutePath());
-        // TODO add your handling code here:
     }//GEN-LAST:event_cmdFindActionPerformed
 
     private JFileChooser getFileChooser() {

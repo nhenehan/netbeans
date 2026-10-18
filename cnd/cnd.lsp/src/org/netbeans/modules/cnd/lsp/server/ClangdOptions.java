@@ -60,9 +60,34 @@ public final class ClangdOptions {
         ClangdOptions options = new ClangdOptions();
         options.setLevel(level);
         options.setLogFile("".equals(logFile) ? null : new File(logFile));
-        options.setClangdExecutable("".equals(clangdExecutable) ? null : new File(clangdExecutable));
+        // Not configured yet: fall back to a clangd found on the PATH
+        options.setClangdExecutable("".equals(clangdExecutable) ? findOnPath() : new File(clangdExecutable));
 
         return options;
+    }
+
+    /**
+     * Looks for a clangd executable in the directories of the PATH
+     * environment variable.
+     *
+     * @return The first clangd found, or null if there is none or PATH is not
+     * set.
+     */
+    public static File findOnPath() {
+        String path = System.getenv("PATH"); // NOI18N
+        if (path == null) {
+            return null;
+        }
+        for (String part : path.split(File.pathSeparator)) {
+            File directory = new File(part);
+            for (String name : new String[]{"clangd", "clangd.exe"}) { // NOI18N
+                File candidate = new File(directory, name);
+                if (candidate.isFile() && candidate.canExecute()) {
+                    return candidate;
+                }
+            }
+        }
+        return null;
     }
 
     /**
