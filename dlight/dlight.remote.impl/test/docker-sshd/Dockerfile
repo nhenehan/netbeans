@@ -17,20 +17,29 @@
 
 # Throwaway remote host for the dlight/cnd remote tests (see README.md next to this file).
 # Has what remote file system, remote build and remote debug need: sshd, a C/C++
-# toolchain, gdb, make/cmake, git/mercurial/subversion for the remote VCS modules,
+# toolchain, gdb, make/cmake, gfortran/fpm, git/mercurial/subversion for the remote VCS modules,
 # and a JRE for the Java "agent" that FileOperationsTestCase runs on the remote side.
 FROM docker.io/library/debian:bookworm-slim
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         openssh-server ca-certificates \
-        build-essential gdb make cmake \
+        build-essential gdb make cmake gfortran curl \
         git mercurial subversion \
         procps file less unzip zip \
         openjdk-17-jre-headless \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /run/sshd \
  && cp -a "/usr/include/$(gcc -print-multiarch)/sys" /usr/include/sys
+
+# fpm (Fortran package manager) is not packaged for bookworm; use the upstream
+# release binary, which is built with gcc 12 like the toolchain above
+ARG FPM_VERSION=0.13.0
+ARG FPM_SHA256=2e50a8649ac4136b9cf6b63c5d1b01adf26c02eedc18f32e16261c0ce655d46d
+RUN curl -fsSL -o /usr/local/bin/fpm \
+        "https://github.com/fortran-lang/fpm/releases/download/v${FPM_VERSION}/fpm-${FPM_VERSION}-linux-x86_64-gcc-12" \
+ && echo "${FPM_SHA256}  /usr/local/bin/fpm" | sha256sum -c - \
+ && chmod 0755 /usr/local/bin/fpm
 
 ARG TEST_USER=nbtest
 ARG TEST_PASSWORD=nbtest
