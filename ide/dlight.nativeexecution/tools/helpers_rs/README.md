@@ -115,9 +115,6 @@ Differences from the C tool, all fixes:
   lock instead of failing.
 - `wait` stops on ECHILD instead of looping.
 
-During the transition, the C build ships as `Linux-x86_64/pty.c`, and
-`-J-Dnativeexecution.nbstart.name=pty.c` makes the IDE use it.
-
 ## Build
 
 ```sh
