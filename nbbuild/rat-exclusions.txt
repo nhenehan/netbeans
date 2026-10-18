@@ -19,6 +19,7 @@
 ###### build artifacts
 **/build/**
 dlight/dlight.remote.impl/tools/fs_server_rs/target/**
+ide/dlight.nativeexecution/tools/helpers_rs/target/**
 licenses/**
 nbbuild/licenses/**
 nbbuild/netbeans/**
