@@ -26,7 +26,7 @@ RUN apt-get update \
         openssh-server ca-certificates \
         build-essential gdb make cmake \
         git mercurial subversion \
-        procps file less \
+        procps file less unzip zip \
         openjdk-17-jre-headless \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /run/sshd \
