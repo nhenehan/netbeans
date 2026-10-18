@@ -167,7 +167,7 @@ public class VersionCommand extends SvnCommand {
                 return 1;
             } else {
                 for (int i = 0; i < parts.length; i++) {
-                    if (t.parts.length < i) {
+                    if (t.parts.length <= i) {
                         return 1;
                     }
                     int a = parts[i];

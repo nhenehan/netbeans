@@ -120,4 +120,11 @@ public class VersionCommandTest {
         assertFalse(VersionCommand.VERSION_15.sameMinor(v110));
         assertFalse(VersionCommand.VERSION_16.sameMinor(v110));
     }
+
+    @Test
+    public void testMorePartsThanOther() {
+        // compareTo used to index past the end of the shorter version
+        assertFalse(Version.parse("1.5.3").lowerThan(VersionCommand.VERSION_15));
+        assertTrue(Version.parse("1.5.3").greaterThan(VersionCommand.VERSION_15));
+    }
 }
