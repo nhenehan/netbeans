@@ -27,6 +27,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -168,6 +170,10 @@ public class TextDocumentSyncServerCapabilityHandler {
                             TextDocumentContentChangeEvent[] fullEvent = new TextDocumentContentChangeEvent[1];
 
                             for (LSPBindings server : servers) {
+                                if (!isNewerThanDidOpen(doc, server, documentVersion)) {
+                                    //the didOpen text already contains this change, or no didOpen was sent yet:
+                                    continue;
+                                }
                                 TextDocumentSyncKind syncKind = TextDocumentSyncKind.None;
                                 Either<TextDocumentSyncKind, TextDocumentSyncOptions> sync = server.getInitResult().getCapabilities().getTextDocumentSync();
                                 if (sync != null) {
@@ -274,6 +280,7 @@ public class TextDocumentSyncServerCapabilityHandler {
                 for (LSPBindings server : servers) {
                     server.getTextDocumentService().didClose(params);
                     server.getOpenedFiles().remove(file);
+                    didOpenVersions(doc).remove(server);
                 }
             });
             openDocument2PanesCount.remove(doc);
@@ -305,6 +312,7 @@ public class TextDocumentSyncServerCapabilityHandler {
 
             String uri = Utils.toURI(file);
             String[] text = new String[1];
+            long[] textVersion = new long[1];
 
             doc.render(() -> {
                 try {
@@ -313,11 +321,13 @@ public class TextDocumentSyncServerCapabilityHandler {
                     Exceptions.printStackTrace(ex);
                     text[0] = "";
                 }
+                textVersion[0] = DocumentUtilities.getDocumentVersion(doc);
             });
 
 
             for (LSPBindings server : servers) {
                 if (server.getOpenedFiles().add(file)) {
+                    didOpenVersions(doc).put(server, textVersion[0]);
                     TextDocumentItem textDocumentItem = new TextDocumentItem(uri,
                                                                              server.resolveLanguageId(file),
                                                                              0,
@@ -335,6 +345,36 @@ public class TextDocumentSyncServerCapabilityHandler {
             LSPBindings.runOnBackground(task);
         }
     }
+
+    /**
+     * The document version whose text was sent with didOpen, per server.
+     * A change can reach the worker after a didOpen that already contains it
+     * (e.g. when a server is (re)started while the document is being modified);
+     * sending it again would desynchronize the server's copy of the document.
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<LSPBindings, Long> didOpenVersions(Document doc) {
+        synchronized (doc) {
+            Map<LSPBindings, Long> versions = (Map<LSPBindings, Long>) doc.getProperty(DID_OPEN_VERSIONS);
+            if (versions == null) {
+                versions = Collections.synchronizedMap(new WeakHashMap<>());
+                doc.putProperty(DID_OPEN_VERSIONS, versions);
+            }
+            return versions;
+        }
+    }
+
+    private static boolean isNewerThanDidOpen(Document doc, LSPBindings server, long changeVersion) {
+        Long openedVersion = didOpenVersions(doc).get(server);
+        if (openedVersion == null) {
+            return false;
+        }
+        //documents without a version (not BaseDocument) cannot be compared:
+        boolean versioned = doc.getProperty("version") instanceof AtomicLong; // NOI18N
+        return !versioned || changeVersion > openedVersion;
+    }
+
+    private static final String DID_OPEN_VERSIONS = "lsp.client.didOpenVersions"; // NOI18N
 
     private void registerBackgroundTasks(JTextComponent c) {
         Document doc = c.getDocument();
