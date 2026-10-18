@@ -207,6 +207,11 @@ public class ImportProject {
             }
             buildCommand = WizardConstants.PROPERTY_BUILD_COMMAND.get(wizard);
             cleanCommand = WizardConstants.PROPERTY_CLEAN_COMMAND.get(wizard);
+            // set when the build installs to a known place (fpm)
+            String result = WizardConstants.PROPERTY_BUILD_RESULT.get(wizard);
+            if (result != null) {
+                buildResult = result;
+            }
         }
         toolchain = WizardConstants.PROPERTY_TOOLCHAIN.get(wizard);
         defaultToolchain = Boolean.TRUE.equals(WizardConstants.PROPERTY_TOOLCHAIN_DEFAULT.get(wizard));

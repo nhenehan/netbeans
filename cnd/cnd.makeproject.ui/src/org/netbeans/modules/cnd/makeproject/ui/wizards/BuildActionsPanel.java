@@ -37,6 +37,7 @@ import org.netbeans.modules.cnd.utils.ui.DocumentAdapter;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
 import org.openide.WizardDescriptor;
 import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileStateInvalidException;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle;
 
@@ -177,12 +178,33 @@ public class BuildActionsPanel extends javax.swing.JPanel implements HelpCtx.Pro
         WizardConstants.PROPERTY_WORKING_DIR.put(wizardDescriptor, buildCommandWorkingDirTextField.getText()); 
         WizardConstants.PROPERTY_BUILD_COMMAND.put(wizardDescriptor, buildCommandTextField.getText()); 
         WizardConstants.PROPERTY_CLEAN_COMMAND.put(wizardDescriptor, cleanCommandTextField.getText()); 
-        WizardConstants.PROPERTY_BUILD_RESULT.put(wizardDescriptor, "");
+        WizardConstants.PROPERTY_BUILD_RESULT.put(wizardDescriptor, getBuildResult(wizardDescriptor));
         WizardConstants.PROPERTY_BUILD_LOG.put(wizardDescriptor, buildLogTextField.getText());
         WizardConstants.PROPERTY_RUN_REBUILD.put(wizardDescriptor, makeCheckBox.isSelected() ? Boolean.TRUE : Boolean.FALSE);
         WizardConstants.PROPERTY_USER_MAKEFILE_PATH.put(wizardDescriptor, makefileName);
     }
     
+    /**
+     * The executable for an fpm project (fpm installs it to a fixed place),
+     * otherwise empty.
+     */
+    private String getBuildResult(WizardDescriptor wizardDescriptor) {
+        if (makefileName != null && FpmScriptSupport.isFpm(BuildSupport.scriptToBuildFile(makefileName))) {
+            FileObject sources = WizardConstants.PROPERTY_NATIVE_PROJ_FO.get(wizardDescriptor);
+            if (sources != null) {
+                try {
+                    String executable = FpmScriptSupport.getExecutable(sources.getFileSystem().findResource(makefileName));
+                    if (executable != null) {
+                        return executable;
+                    }
+                } catch (FileStateInvalidException ex) {
+                    // no build result then
+                }
+            }
+        }
+        return ""; // NOI18N
+    }
+
     boolean valid(WizardDescriptor settings) {
         if (buildCommandWorkingDirTextField.getText().length() == 0) {
             String msg = NbBundle.getMessage(BuildActionsPanel.class, "NOWORKINGDIR"); // NOI18N

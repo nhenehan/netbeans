@@ -274,6 +274,13 @@ public class SelectModeDescriptorPanel implements ProjectWizardPanels.MakeModePa
                 WizardConstants.PROPERTY_WORKING_DIR.put(settings, CndPathUtilities.getDirName(makeArtifact.getFile()));
                 WizardConstants.PROPERTY_BUILD_COMMAND.put(settings, makeArtifact.getBuildCommandLine(null, CndPathUtilities.getDirName(makeArtifact.getFile())));
                 WizardConstants.PROPERTY_CLEAN_COMMAND.put(settings, makeArtifact.getCleanCommandLine(null, CndPathUtilities.getDirName(makeArtifact.getFile())));
+                if (FpmScriptSupport.isFpm(makeArtifact)) {
+                    // fpm installs to a fixed place, so Run and Debug know the executable
+                    String executable = FpmScriptSupport.getExecutable(makefileFO);
+                    if (executable != null) {
+                        WizardConstants.PROPERTY_BUILD_RESULT.put(settings, executable);
+                    }
+                }
             }
         }
         
