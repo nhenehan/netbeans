@@ -37,7 +37,7 @@
         not installed is skipped with a warning, only Linux-x86_64 is required.
     -->
     <property name="extra.module.files"
-              value="bin/nativeexecution/Linux-x86_64/killall,bin/nativeexecution/Linux-aarch64/killall"/>
+              value="bin/nativeexecution/Linux-x86_64/killall,bin/nativeexecution/Linux-x86_64/pty_open,bin/nativeexecution/Linux-aarch64/killall,bin/nativeexecution/Linux-aarch64/pty_open"/>
 
     <target name="-helpers-rs-check">
         <exec executable="cargo" failifexecutionfails="false" resultproperty="helpers_rs.cargo.rc" outputproperty="helpers_rs.cargo.version">
@@ -57,10 +57,13 @@
             <arg value="build-dist.sh"/>
             <arg file="${cluster}"/>
         </exec>
-        <fail message="killall for Linux-x86_64 was not built: rustup target add x86_64-unknown-linux-musl">
+        <fail message="the Rust helpers for Linux-x86_64 were not built: rustup target add x86_64-unknown-linux-musl">
             <condition>
                 <not>
-                    <available file="${cluster}/bin/nativeexecution/Linux-x86_64/killall"/>
+                    <and>
+                        <available file="${cluster}/bin/nativeexecution/Linux-x86_64/killall"/>
+                        <available file="${cluster}/bin/nativeexecution/Linux-x86_64/pty_open"/>
+                    </and>
                 </not>
             </condition>
         </fail>

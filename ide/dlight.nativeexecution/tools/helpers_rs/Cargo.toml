@@ -29,6 +29,10 @@ publish = false
 name = "killall"
 path = "src/bin/killall.rs"
 
+[[bin]]
+name = "pty_open"
+path = "src/bin/pty_open.rs"
+
 [dependencies]
 libc = "0.2"
 

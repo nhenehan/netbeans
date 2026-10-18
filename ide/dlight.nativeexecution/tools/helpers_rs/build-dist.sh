@@ -25,7 +25,7 @@
 
 set -eu
 
-helpers="killall"
+helpers="killall pty_open"
 
 out=${1:?usage: build-dist.sh <outdir> [target:platform ...]}
 shift
