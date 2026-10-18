@@ -24,7 +24,7 @@ The remote half of the NetBeans remote file system. The IDE
 `<tmp>/bin/<osname>-<platform><_isa>/fs_server` on the remote host and talks
 to it over stdin/stdout.
 
-This is a drop-in replacement for the C implementation in `../fs_server`.
+This is a drop-in replacement for the original C implementation (fs_server 1.12.8, no longer in this repository; see the differential test below).
 It keeps the following the same:
 
 - the command line;
@@ -51,30 +51,49 @@ The default targets are:
 | Rust target | IDE directory |
 |---|---|
 | `x86_64-unknown-linux-musl` | `Linux-x86_64` |
-| `aarch64-unknown-linux-musl` | `Linux-aarch64` (the C zip has no build for this) |
+| `aarch64-unknown-linux-musl` | `Linux-aarch64` |
 | `armv7-unknown-linux-musleabihf` | `Linux-arm` |
+| `x86_64-apple-darwin` | `MacOSX-x86` |
+| `aarch64-apple-darwin` | `MacOSX-arm` (Apple silicon reports its CPU family as `arm`) |
 
-All three link with `rust-lld`; no cross gcc is needed.
+The Linux targets link with `rust-lld`, so no cross gcc is needed. The macOS
+targets need [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)
+and zig (`cargo install cargo-zigbuild`); no Xcode SDK is needed, and zig
+ad-hoc signs the arm64 binary as Apple silicon requires. Without zigbuild the
+macOS targets are skipped. Hosts with no matching binary (Solaris, FreeBSD,
+32-bit or sparc Linux) fall back to plain SFTP.
+
+To install all targets:
+
+```sh
+rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl \
+    armv7-unknown-linux-musleabihf x86_64-apple-darwin aarch64-apple-darwin
+cargo install cargo-zigbuild    # plus zig on the PATH
+```
 
 ## Using it from the IDE
 
-There are two ways:
+The module build (`ant -f dlight/dlight.remote.impl/build.xml netbeans`, and
+any cluster build) always builds fs_server from this crate into the cluster's
+`bin/<platform>/fs_server`. It fails if cargo is missing or if the
+Linux-x86_64 binary could not be built; other missing targets are a warning.
 
-- **Build it into the cluster.** Run
-  `ant -f dlight/dlight.remote.impl/build.xml -Dfs_server.rust=true netbeans`.
-  This replaces the C binaries extracted from `external/fs_server-1.0.zip`
-  with the Rust ones for the platforms listed above. The other platforms
-  (SunOS, FreeBSD, MacOSX-x86, Linux-x86, Linux-sparc) keep the C binaries.
-  Without the property, the build is unchanged.
-- **Try it without rebuilding.** Start the IDE with
-  `-J-Dlocal.fs_server.path=/path/to/fs_server`. You can also use
-  `-J-Dremote.fs_server.path=...` to point at a binary that is already on the
-  remote host.
+To try a binary without rebuilding, start the IDE with
+`-J-Dlocal.fs_server.path=/path/to/fs_server`, or use
+`-J-Dremote.fs_server.path=...` to point at a binary that is already on the
+remote host.
 
 ## Differential test against the C server
 
+The C sources are not in this repository: they are licensed CDDL/GPL-2+CP
+(from the Oracle donations), which Apache allows in binary form only. Get them
+from the NetBeans 8.2-era sources, e.g.
+<https://github.com/emilianbold/netbeans-releases/tree/master/dlight.remote.impl/tools/fs_server>
+(this crate was compared against fs_server 1.12.8), then:
+
 ```sh
-gcc -O1 -std=gnu99 -D_GNU_SOURCE -D_FORTIFY_SOURCE=0 -pthread -w ../fs_server/src/*.c -o /tmp/fs_server_c
+FS_SERVER_C_SRC=/path/to/fs_server/src
+gcc -O1 -std=gnu99 -D_GNU_SOURCE -D_FORTIFY_SOURCE=0 -pthread -w "$FS_SERVER_C_SRC"/*.c -o /tmp/fs_server_c
 python3 test/compare_with_c.py /tmp/fs_server_c target/release/fs_server
 ```
 
@@ -127,7 +146,7 @@ their stdout byte for byte. It covers:
    `dirs_forbidden_to_stat` list once per settings version. Copy-on-write
    shares that list between versions, so any option change after the IDE has
    sent the forbidden list causes a double free at exit.
-3. The other problems listed in `../fs_server/todo.txt`: unchecked `decode_*`
+3. The other problems listed in the C sources' `todo.txt`: unchecked `decode_*`
    results, the flat cache layout, and so on.
 
 ## Known limitation in the Java client (not fixed here)

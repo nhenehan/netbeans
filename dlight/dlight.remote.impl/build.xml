@@ -23,45 +23,44 @@
     <description>Builds, tests, and runs the project org.netbeans.modules.dlight.remote.impl</description>
     <import file="../../nbbuild/templates/projectized.xml"/>
 
-    <property name="binaries.dir" value="release/bin"/>
-    <property name="binaries.zip" value="external/fs_server-1.0.zip"/>
-
-    <target name="-overwrite-binaries-zip" if="${zip.binaries.from.release.bin}">
-        <echo message="######################################################################"></echo>
-        <echo message="#  ATTENTION:"></echo>
-        <echo message="#  Updating ${binaries.zip} with binaries ${binaries.dir}"></echo>
-        <echo message="######################################################################"></echo>
-        <zip update="true" basedir="${binaries.dir}" destfile="${binaries.zip}"/>
-    </target>
-
-    <target name="-dlight-remote-release.files" depends="projectized-common.-release.files,projectized.-define-downloadbinaries-task">
-        <echo message="Overridden -release.files by dlight.remote.impl" />
-        <downloadbinaries cache="${binaries.cache}" server="${binaries.server}">
-            <manifest dir=".">
-                <include name="dlight/external/binaries-list"/>
-            </manifest>
-        </downloadbinaries>
-        <taskdef name="releasefilesextra" classname="org.netbeans.nbbuild.extlibs.ReleaseFilesExtra" classpath="${nbantext.jar}"/>
-        <releasefilesextra property="release.files.extra"/>
-    </target>
-
-    <target name="-release.files" depends="-dlight-remote-release.files,-overwrite-binaries-zip">
-    </target>
-
     <!--
-        Opt-in: -Dfs_server.rust=true replaces the prebuilt C fs_server binaries (from
-        external/fs_server-1.0.zip) with the Rust implementation in tools/fs_server_rs,
-        for the Linux platforms whose Rust targets are installed (adds Linux-aarch64).
-        Requires cargo/rustup on the build machine; see tools/fs_server_rs/README.md.
+        fs_server, the remote file system helper the IDE uploads to remote hosts, is the
+        Rust implementation in tools/fs_server_rs, built from source here for
+        Linux x86_64/aarch64/arm and macOS x86/arm (see tools/fs_server_rs/README.md).
+        Needs cargo and rustup; the Linux targets link with rust-lld, macOS ones with
+        cargo-zigbuild. Targets that are not installed are skipped with a warning, only
+        Linux-x86_64 is required. Hosts without a matching binary use plain SFTP.
     -->
-    <target name="-fs-server-rust" if="fs_server.rust">
+    <property name="extra.module.files"
+              value="bin/Linux-x86_64/fs_server,bin/Linux-aarch64/fs_server,bin/Linux-arm/fs_server,bin/MacOSX-x86/fs_server,bin/MacOSX-arm/fs_server"/>
+
+    <target name="-fs-server-check">
+        <exec executable="cargo" failifexecutionfails="false" resultproperty="fs_server.cargo.rc" outputproperty="fs_server.cargo.version">
+            <arg value="--version"/>
+        </exec>
+        <fail message="Building fs_server needs Rust: install rustup and cargo, then 'rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf' (macOS hosts also: 'rustup target add x86_64-apple-darwin aarch64-apple-darwin' and 'cargo install cargo-zigbuild' with zig on the PATH)">
+            <condition>
+                <not>
+                    <equals arg1="${fs_server.cargo.rc}" arg2="0"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="-fs-server" depends="-fs-server-check">
         <exec executable="sh" dir="tools/fs_server_rs" failonerror="true">
             <arg value="build-dist.sh"/>
             <arg file="${cluster}"/>
         </exec>
+        <fail message="fs_server for Linux-x86_64 was not built: rustup target add x86_64-unknown-linux-musl">
+            <condition>
+                <not>
+                    <available file="${cluster}/bin/Linux-x86_64/fs_server"/>
+                </not>
+            </condition>
+        </fail>
     </target>
 
-    <!-- after projectized.release, which extracts the C binaries from the zip into the cluster -->
-    <target name="release" depends="projectized.release,-fs-server-rust"/>
+    <target name="release" depends="projectized.release,-fs-server"/>
 
 </project>

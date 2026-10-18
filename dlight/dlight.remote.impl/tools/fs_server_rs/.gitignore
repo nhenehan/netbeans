@@ -1,1 +1,3 @@
 target/
+# written by cargo-zigbuild (zig) when linking the macOS targets
+.intentionally-empty-file.o

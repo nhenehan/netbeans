@@ -20,7 +20,7 @@
 # Dockerfile next to this script (listening on 127.0.0.1:2222 only).
 #
 # Usage: run-remote-tests.sh <module-dir> [extra ant args...]
-#   e.g. run-remote-tests.sh dlight/dlight.remote.impl -Dfs_server.rust=true
+#   e.g. run-remote-tests.sh dlight/dlight.remote.impl
 
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)

@@ -18,7 +18,7 @@
 //! `fs_server`: the remote side of the NetBeans remote file system
 //! (`org.netbeans.modules.remote.impl.fs.server.FSSDispatcher`).
 //!
-//! A drop-in replacement for the C implementation in `../fs_server`: same command
+//! A drop-in replacement for the original C fs_server (1.12.8): same command
 //! line, same line protocol on stdin/stdout, same exit codes and the same on-disk
 //! cache layout under `~/.netbeans/remotefs`.
 

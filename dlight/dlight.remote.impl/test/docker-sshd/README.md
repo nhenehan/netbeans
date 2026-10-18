@@ -30,8 +30,7 @@ matching rc files (`cndtestrc`, `testuserinfo`), so nothing has to be written
 to `~/.cndtestrc` or `~/.testuserinfo`.
 
 ```sh
-dlight/dlight.remote.impl/test/docker-sshd/run-remote-tests.sh dlight/dlight.remote.impl -Dfs_server.rust=true
-xvfb-run -a dlight/dlight.remote.impl/test/docker-sshd/run-remote-tests.sh dlight/dlight.remote.impl   # C fs_server
+xvfb-run -a dlight/dlight.remote.impl/test/docker-sshd/run-remote-tests.sh dlight/dlight.remote.impl
 ```
 
 The script uses podman if it is installed, otherwise docker. The user and
@@ -43,8 +42,8 @@ Baseline on 2026-10-16 (master d8e2006421, `dlight.remote.impl`): 271 tests,
 
 | fs_server | Failures |
 |---|---|
-| Rust (`-Dfs_server.rust=true`) | `testMultipleRead` only |
-| C | same as Rust |
+| Rust (the default since the C sources and binaries were removed) | `testMultipleRead` only |
+| C (prebuilt CDDL binaries, before that) | same as Rust |
 
 `testMultipleRead` is a timing flake over loopback: it requires later passes
 to take at most 1/8 of the first pass, and the first pass takes only ~5 ms.

@@ -21,6 +21,10 @@
 #
 # Usage: build-dist.sh <outdir> [rust-target:platform-dir ...]
 # Targets that are not installed (rustup target list --installed) are skipped.
+# macOS targets are linked with cargo-zigbuild (cargo install cargo-zigbuild,
+# plus zig on the PATH) and skipped without it. The platform directories follow
+# FSSDispatcher: Linux gets ${_isa} ("_64", but not for aarch64), macOS does not,
+# and Apple silicon reports its CPU family as "arm".
 
 set -eu
 
@@ -29,12 +33,16 @@ shift
 [ $# -gt 0 ] || set -- \
     x86_64-unknown-linux-musl:Linux-x86_64 \
     aarch64-unknown-linux-musl:Linux-aarch64 \
-    armv7-unknown-linux-musleabihf:Linux-arm
+    armv7-unknown-linux-musleabihf:Linux-arm \
+    x86_64-apple-darwin:MacOSX-x86 \
+    aarch64-apple-darwin:MacOSX-arm
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here"
 
 installed=$(rustup target list --installed 2>/dev/null || true)
+zigbuild=no
+cargo zigbuild --help >/dev/null 2>&1 && command -v zig >/dev/null 2>&1 && zigbuild=yes
 built=0
 for spec in "$@"; do
     target=${spec%%:*}
@@ -43,9 +51,23 @@ for spec in "$@"; do
         echo "fs_server_rs: skipping $target (not installed; rustup target add $target)" >&2
         continue
     fi
-    # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc
-    var=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_LINKER
-    env "$var=rust-lld" cargo build --quiet --release --locked --target "$target"
+    case "$target" in
+    *-apple-darwin)
+        if [ "$zigbuild" != yes ]; then
+            echo "fs_server_rs: skipping $target (needs cargo-zigbuild and zig)" >&2
+            continue
+        fi
+        # zig links against its bundled macOS libc stubs, no Xcode SDK needed;
+        # it also ad-hoc signs the arm64 binary, which Apple silicon requires
+        # (it warns that no Xcode SDK was found; that is expected)
+        cargo zigbuild --quiet --release --locked --target "$target"
+        ;;
+    *)
+        # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc
+        var=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_LINKER
+        env "$var=rust-lld" cargo build --quiet --release --locked --target "$target"
+        ;;
+    esac
     mkdir -p "$out/bin/$platform"
     cp "target/$target/release/fs_server" "$out/bin/$platform/fs_server"
     chmod 755 "$out/bin/$platform/fs_server"
