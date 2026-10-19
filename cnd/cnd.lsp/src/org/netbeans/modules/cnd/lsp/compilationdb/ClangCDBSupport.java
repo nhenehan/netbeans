@@ -18,6 +18,8 @@
  */
 package org.netbeans.modules.cnd.lsp.compilationdb;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,6 +32,7 @@ import org.netbeans.modules.cnd.api.project.NativeProjectItemsListener;
 import org.netbeans.modules.cnd.makeproject.api.MakeProject;
 import org.netbeans.modules.cnd.makeproject.api.support.MakeProjectEvent;
 import org.netbeans.modules.cnd.makeproject.api.support.MakeProjectListener;
+import org.netbeans.spi.project.ProjectConfigurationProvider;
 import org.netbeans.spi.project.ui.ProjectOpenedHook;
 import org.openide.util.RequestProcessor;
 
@@ -41,6 +44,10 @@ import org.openide.util.RequestProcessor;
  * When "ProjectOpenedHook.projectOpened" is fired, i.e., when the project is
  * opened, we start listening to NativeProjectItemsListener and
  * MakeProjectListener.
+ *
+ * We also listen to the project's configurations: they are read in the
+ * background after the project opens, so the first regeneration happens when
+ * they are loaded, and switching the active configuration regenerates too.
  *
  * We remove these listeners when the project is closed or deleted.
  *
@@ -57,6 +64,7 @@ public final class ClangCDBSupport
     private static final long COALESCING_DELAY_MS = 1000;
     private final MakeProject makeProject;
     private final BlockingQueue<ClangCDBGenerationCause> pendingCauses;
+    private final PropertyChangeListener configurationListener = this::configurationChanged;
     private boolean projectOpen;
 
     public ClangCDBSupport(final MakeProject makeProject) {
@@ -152,6 +160,10 @@ public final class ClangCDBSupport
         LOG.log(Level.FINE, "Project opened");
         projectOpen = true;
         makeProject.getHelper().addMakeProjectListener(this);
+        ProjectConfigurationProvider<?> configurations = makeProject.getLookup().lookup(ProjectConfigurationProvider.class);
+        if (configurations != null) {
+            configurations.addPropertyChangeListener(configurationListener);
+        }
         NativeProject nativeProject = makeProject.getLookup().lookup(NativeProject.class);
         if (nativeProject != null) {
             nativeProject.addProjectItemsListener(this);
@@ -176,11 +188,21 @@ public final class ClangCDBSupport
     private void removeListenersOnCloseOrDelete() {
         projectOpen = false;
         makeProject.getHelper().removeMakeProjectListener(this);
+        ProjectConfigurationProvider<?> configurations = makeProject.getLookup().lookup(ProjectConfigurationProvider.class);
+        if (configurations != null) {
+            configurations.removePropertyChangeListener(configurationListener);
+        }
         NativeProject nativeProject = makeProject.getLookup().lookup(NativeProject.class);
         if (nativeProject != null) {
             nativeProject.removeProjectItemsListener(this);
         } else {
             LOG.log(Level.FINE, "Cannot detach from native project events.");
+        }
+    }
+
+    private void configurationChanged(PropertyChangeEvent evt) {
+        if (ProjectConfigurationProvider.PROP_CONFIGURATION_ACTIVE.equals(evt.getPropertyName())) {
+            updateCompilationDatabase(ClangCDBGenerationCause.ACTIVE_CONFIGURATION_CHANGED);
         }
     }
 
@@ -194,6 +216,13 @@ public final class ClangCDBSupport
     private void updateCompilationDatabase(ClangCDBGenerationCause cause) {
         LOG.log(Level.FINE, "Update compilation database project is open: {0}", projectOpen);
         if (projectOpen) {
+            if (makeProject.getActiveConfiguration() == null) {
+                // the configurations are still being read: the database is
+                // generated once they are loaded (ACTIVE_CONFIGURATION_CHANGED)
+                LOG.log(Level.FINE, "No active configuration yet for {0}, postponing {1}",
+                        new Object[]{makeProject.getProjectDirectory().getPath(), cause});
+                return;
+            }
             pendingCauses.add(cause);
             ClangCDBGenerationTask task = null;
             try {

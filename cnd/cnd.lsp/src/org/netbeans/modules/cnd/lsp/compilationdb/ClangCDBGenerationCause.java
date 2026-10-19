@@ -42,6 +42,11 @@ enum ClangCDBGenerationCause {
      */
     PROJECT_CONFIGURATION_CHANGED,
     /**
+     * The project's configurations were loaded, or another configuration
+     * became the active one.
+     */
+    ACTIVE_CONFIGURATION_CHANGED,
+    /**
      * Project is opened.
      */
     PROJECT_OPENED, 

@@ -1561,7 +1561,13 @@ public final class MakeProjectImpl implements Project, MakeProjectListener, Make
     
     void setDeleted() {
         LOGGER.log(Level.FINE, "set deleted MakeProject@{0} {1}", new Object[]{System.identityHashCode(MakeProjectImpl.this), helper.getProjectDirectory()}); // NOI18N
-        isDeleted.set(true);
+        // Deleting closes the project first, but projectui runs the close
+        // hook asynchronously, and its save() would write nbproject/ back
+        // into the directory being deleted. save() runs under this lock and
+        // checks isDeleted, so wait for a save in progress and stop later ones.
+        synchronized (openStateAndLock) {
+            isDeleted.set(true);
+        }
     }
 
     void setDeleting(boolean value) {

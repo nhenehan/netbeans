@@ -112,12 +112,20 @@ public class MakeTemplateListener implements OperationListener {
     
     @Override
     public void operationCreateFromTemplate(OperationEvent.Copy copy) {
-        Folder folder = Utilities.actionsGlobalContext().lookup(Folder.class);
+        Folder folder;
         Project project;
-        if (folder != null) {
-            project = folder.getProject();
+        if (contextProject != null && contextCD != null) {
+            // a project is being created: the file belongs to it, whatever
+            // is selected in the IDE (possibly a node of another project)
+            folder = null;
+            project = null;
         } else {
-            project = Utilities.actionsGlobalContext().lookup(Project.class);
+            folder = Utilities.actionsGlobalContext().lookup(Folder.class);
+            if (folder != null) {
+                project = folder.getProject();
+            } else {
+                project = Utilities.actionsGlobalContext().lookup(Project.class);
+            }
         }
         
         DataObject originalDataObject = copy.getOriginalDataObject();
