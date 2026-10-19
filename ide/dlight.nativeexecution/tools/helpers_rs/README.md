@@ -21,9 +21,8 @@
 
 Rust ports of the native helpers that `dlight.nativeexecution` runs locally and
 uploads to remote hosts. The IDE finds them through `HelperUtility` as
-`bin/nativeexecution/<osname>-<platform><_isa>/<helper>`. This crate only builds
-Linux binaries. The other platforms keep the prebuilt binaries from `external/`,
-and so do the helpers that have not been ported yet.
+`bin/nativeexecution/<osname>-<platform><_isa>/<helper>`. This crate builds all
+of them for Linux. The other platforms keep the prebuilt binaries from `external/`.
 
 | Helper | Replaces | Java side |
 |---|---|---|
@@ -143,7 +142,13 @@ KILLALL_C=/path/to/c/killall PTY_OPEN_C=/path/to/c/pty_open PTY_C=/path/to/c/pty
 UNBUFFER_SO=/tmp/out/bin/nativeexecution/Linux-x86_64/unbuffer.so cargo test --test unbuffer
 ```
 
-`ant build` runs `build-dist.sh` (see `../../build.xml`). The default targets are
-`x86_64-unknown-linux-musl` (`Linux-x86_64`) and `aarch64-unknown-linux-musl`
-(`Linux-aarch64`). Both link statically with `rust-lld`, so the binaries do not
-depend on the host's glibc version.
+`ant build` runs `build-dist.sh` (see `../../build.xml`). The default targets are:
+
+| Rust target | IDE directory |
+|---|---|
+| `x86_64-unknown-linux-musl` | `Linux-x86_64` |
+| `aarch64-unknown-linux-musl` | `Linux-aarch64` (no `_64`, see the `${_isa}` macro) |
+| `i686-unknown-linux-musl` | `Linux-x86`: 32-bit hosts, and 32-bit programs on x86_64 hosts (`unbuffer.so`) |
+
+They all link with `rust-lld`, and the executables are static, so they don't
+depend on the host's glibc version. Linux-sparc_64 was dropped (2026-10-18).

@@ -36,12 +36,14 @@ use std::sync::atomic::{AtomicI64, Ordering};
 /// CLOCK_MONOTONIC; 0 = not yet.
 static START_MS: AtomicI64 = AtomicI64::new(0);
 
+// the casts widen time_t/c_long on 32-bit targets (i686); no-ops on 64-bit
+#[allow(clippy::unnecessary_cast)]
 pub fn monotonic_ms() -> i64 {
     // SAFETY: clock_gettime with a valid timespec; async-signal-safe
     unsafe {
         let mut ts: libc::timespec = std::mem::zeroed();
         libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
-        ts.tv_sec * 1000 + ts.tv_nsec / 1_000_000
+        ts.tv_sec as i64 * 1000 + ts.tv_nsec as i64 / 1_000_000
     }
 }
 
@@ -351,8 +353,14 @@ pub fn terminate(pid: i32) -> Option<(i32, libc::rusage)> {
     wait_child(pid)
 }
 
+#[allow(clippy::unnecessary_cast)] // see monotonic_ms
+pub fn maxrss_kb(ru: &libc::rusage) -> i64 {
+    ru.ru_maxrss as i64
+}
+
+#[allow(clippy::unnecessary_cast)] // see monotonic_ms
 pub fn rusage_ms(tv: libc::timeval) -> i64 {
-    tv.tv_sec * 1000 + tv.tv_usec / 1000
+    tv.tv_sec as i64 * 1000 + tv.tv_usec as i64 / 1000
 }
 
 #[cfg(test)]

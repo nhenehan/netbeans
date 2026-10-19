@@ -34,7 +34,8 @@ out=${1:?usage: build-dist.sh <outdir> [target:platform ...]}
 shift
 [ $# -gt 0 ] || set -- \
     x86_64-unknown-linux-musl:Linux-x86_64 \
-    aarch64-unknown-linux-musl:Linux-aarch64
+    aarch64-unknown-linux-musl:Linux-aarch64 \
+    i686-unknown-linux-musl:Linux-x86
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here"
