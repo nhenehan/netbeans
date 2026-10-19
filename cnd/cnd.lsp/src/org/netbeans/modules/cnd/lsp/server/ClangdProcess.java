@@ -29,13 +29,19 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.SwingPropertyChangeSupport;
 import org.netbeans.api.project.Project;
+import org.netbeans.modules.cnd.api.toolchain.CompilerSet;
+import org.netbeans.modules.cnd.api.toolchain.CompilerSetManager;
+import org.netbeans.modules.cnd.api.toolchain.PredefinedToolKind;
+import org.netbeans.modules.cnd.api.toolchain.Tool;
 import org.netbeans.modules.lsp.client.spi.LanguageServerProvider.LanguageServerDescription;
 import org.netbeans.modules.lsp.client.spi.ServerRestarter;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
@@ -188,8 +194,57 @@ public final class ClangdProcess {
         commands.add("--clang-tidy"); // NOI18N
         commands.add("--completion-style=detailed"); // NOI18N
         commands.add("--offset-encoding=utf-8"); // NOI18N
+        String queryDriver = queryDriverArgument(compilerPaths());
+        if (queryDriver != null) {
+            commands.add(queryDriver);
+        }
         commands.addAll(options.getCommandLineOptions());
         return commands.toArray(new String[commands.size()]);
+    }
+
+    /**
+     * The C and C++ compilers of every tool collection on this host. The
+     * compilation databases name these compilers, and clangd only asks a
+     * compiler for its system include paths when --query-driver allows it.
+     * Without that clangd guesses them from the newest gcc installation,
+     * which may lack the C++ headers (e.g. 'cstdlib' file not found).
+     */
+    private List<String> compilerPaths() {
+        List<String> paths = new ArrayList<>();
+        try {
+            for (CompilerSet compilerSet : CompilerSetManager.get(env).getCompilerSets()) {
+                for (Tool tool : compilerSet.getTools()) {
+                    if (tool.getKind() == PredefinedToolKind.CCompiler
+                            || tool.getKind() == PredefinedToolKind.CCCompiler) {
+                        paths.add(tool.getPath());
+                    }
+                }
+            }
+        } catch (RuntimeException ex) {
+            LOG.log(Level.INFO, "Cannot list the compilers of " + env.getDisplayName(), ex); // NOI18N
+        }
+        return paths;
+    }
+
+    /**
+     * Builds clangd's --query-driver argument from compiler paths.
+     *
+     * @param compilerPaths The compiler paths, possibly with duplicates or
+     * empty entries.
+     * @return The argument, or null if there is no compiler path.
+     */
+    static String queryDriverArgument(Collection<String> compilerPaths) {
+        LinkedHashSet<String> drivers = new LinkedHashSet<>();
+        for (String path : compilerPaths) {
+            // the argument is a comma separated list of globs
+            if (path != null && !path.isEmpty() && path.indexOf(',') < 0) {
+                drivers.add(path);
+            }
+        }
+        if (drivers.isEmpty()) {
+            return null;
+        }
+        return "--query-driver=" + String.join(",", drivers); // NOI18N
     }
 
     public void start(ServerRestarter serverRestarter) throws IOException {
