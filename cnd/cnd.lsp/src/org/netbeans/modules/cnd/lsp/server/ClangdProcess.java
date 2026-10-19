@@ -77,6 +77,8 @@ public final class ClangdProcess {
 
     private static final RequestProcessor STDERR_RP = new RequestProcessor("clangd stderr", 8); // NOI18N
 
+    private static final RequestProcessor RESTART_RP = new RequestProcessor("clangd restart", 1); // NOI18N
+
     /**
      * Returns the ClangdProcess of the local host.
      *
@@ -156,6 +158,8 @@ public final class ClangdProcess {
     private final ExecutionEnvironment env;
     private final SwingPropertyChangeSupport propertyChangeSupport;
     private Process process;
+    // the command line of the running clangd, shown in the project's node
+    private volatile String[] startedCommands;
     private String remoteClangd;
     private boolean missingClangdNotified;
     private LanguageServerDescription languageServerDescription;
@@ -182,7 +186,19 @@ public final class ClangdProcess {
         return env;
     }
 
+    /**
+     * Returns the command line clangd was last started with or, if it was
+     * never started, the one it would start with apart from --query-driver.
+     * Cheap enough for the EDT: it does not ask the host for its compilers.
+     *
+     * @return The clangd command line.
+     */
     public String[] getCommands() {
+        String[] commands = startedCommands;
+        return commands != null ? commands.clone() : buildCommands(false);
+    }
+
+    private String[] buildCommands(boolean withQueryDriver) {
         ClangdOptions options = ClangdOptions.load();
         ArrayList<String> commands = new ArrayList<>();
         if (env.isLocal()) {
@@ -194,7 +210,7 @@ public final class ClangdProcess {
         commands.add("--clang-tidy"); // NOI18N
         commands.add("--completion-style=detailed"); // NOI18N
         commands.add("--offset-encoding=utf-8"); // NOI18N
-        String queryDriver = queryDriverArgument(compilerPaths());
+        String queryDriver = withQueryDriver ? queryDriverArgument(compilerPaths()) : null;
         if (queryDriver != null) {
             commands.add(queryDriver);
         }
@@ -272,7 +288,8 @@ public final class ClangdProcess {
         } else {
             fireStateChange(LSPServerState.STOPPED);
         }
-        String[] commands = getCommands();
+        String[] commands = buildCommands(true);
+        startedCommands = commands;
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(commands);
             File logFile = options.getLogFile();
@@ -323,7 +340,8 @@ public final class ClangdProcess {
             throw new IOException("clangd not found on " + env.getDisplayName()); // NOI18N
         }
         fireStateChange(LSPServerState.STOPPED);
-        String[] commands = getCommands();
+        String[] commands = buildCommands(true);
+        startedCommands = commands;
         try {
             NativeProcess remote = NativeProcessBuilder.newProcessBuilder(env)
                     .setExecutable(commands[0])
@@ -417,12 +435,19 @@ public final class ClangdProcess {
         }
     }
 
+    /**
+     * Restarts clangd in the background: starting it asks the host for its
+     * compilers (and, for remote hosts, where clangd is), which must not
+     * happen on the EDT.
+     */
     public void restart() {
-        try {
-            start(this.serverRestarter);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+        RESTART_RP.post(() -> {
+            try {
+                start(this.serverRestarter);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        });
     }
 
 }
