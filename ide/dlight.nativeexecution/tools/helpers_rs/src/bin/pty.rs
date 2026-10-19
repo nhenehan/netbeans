@@ -21,7 +21,7 @@ use nativeexecution_helpers::pty::relay::{relay, Ended};
 use nativeexecution_helpers::pty::report::{exit_code, format, Outcome};
 use nativeexecution_helpers::pty::{
     attach_terminal, child_fail, current_env, install_sigcont_handler, monotonic_ms, run_child,
-    rusage_ms, set_signal, start_ms, strerror, terminate, wait_child, ChildPlan,
+    maxrss_kb, rusage_ms, set_signal, start_ms, strerror, terminate, wait_child, ChildPlan,
 };
 use std::ffi::{CStr, CString, OsString};
 use std::fs::OpenOptions;
@@ -256,7 +256,7 @@ fn main() {
             rtime_ms: if start == 0 { 0 } else { end - start },
             utime_ms: rusage_ms(ru.ru_utime),
             stime_ms: rusage_ms(ru.ru_stime),
-            maxrss_kb: ru.ru_maxrss,
+            maxrss_kb: maxrss_kb(&ru),
         };
         let written = OpenOptions::new()
             .write(true)
