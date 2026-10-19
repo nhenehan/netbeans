@@ -29,13 +29,19 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.SwingPropertyChangeSupport;
 import org.netbeans.api.project.Project;
+import org.netbeans.modules.cnd.api.toolchain.CompilerSet;
+import org.netbeans.modules.cnd.api.toolchain.CompilerSetManager;
+import org.netbeans.modules.cnd.api.toolchain.PredefinedToolKind;
+import org.netbeans.modules.cnd.api.toolchain.Tool;
 import org.netbeans.modules.lsp.client.spi.LanguageServerProvider.LanguageServerDescription;
 import org.netbeans.modules.lsp.client.spi.ServerRestarter;
 import org.netbeans.modules.nativeexecution.api.ExecutionEnvironment;
@@ -70,6 +76,8 @@ public final class ClangdProcess {
             "/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"); // NOI18N
 
     private static final RequestProcessor STDERR_RP = new RequestProcessor("clangd stderr", 8); // NOI18N
+
+    private static final RequestProcessor RESTART_RP = new RequestProcessor("clangd restart", 1); // NOI18N
 
     /**
      * Returns the ClangdProcess of the local host.
@@ -150,6 +158,8 @@ public final class ClangdProcess {
     private final ExecutionEnvironment env;
     private final SwingPropertyChangeSupport propertyChangeSupport;
     private Process process;
+    // the command line of the running clangd, shown in the project's node
+    private volatile String[] startedCommands;
     private String remoteClangd;
     private boolean missingClangdNotified;
     private LanguageServerDescription languageServerDescription;
@@ -176,7 +186,19 @@ public final class ClangdProcess {
         return env;
     }
 
+    /**
+     * Returns the command line clangd was last started with or, if it was
+     * never started, the one it would start with apart from --query-driver.
+     * Cheap enough for the EDT: it does not ask the host for its compilers.
+     *
+     * @return The clangd command line.
+     */
     public String[] getCommands() {
+        String[] commands = startedCommands;
+        return commands != null ? commands.clone() : buildCommands(false);
+    }
+
+    private String[] buildCommands(boolean withQueryDriver) {
         ClangdOptions options = ClangdOptions.load();
         ArrayList<String> commands = new ArrayList<>();
         if (env.isLocal()) {
@@ -188,8 +210,57 @@ public final class ClangdProcess {
         commands.add("--clang-tidy"); // NOI18N
         commands.add("--completion-style=detailed"); // NOI18N
         commands.add("--offset-encoding=utf-8"); // NOI18N
+        String queryDriver = withQueryDriver ? queryDriverArgument(compilerPaths()) : null;
+        if (queryDriver != null) {
+            commands.add(queryDriver);
+        }
         commands.addAll(options.getCommandLineOptions());
         return commands.toArray(new String[commands.size()]);
+    }
+
+    /**
+     * The C and C++ compilers of every tool collection on this host. The
+     * compilation databases name these compilers, and clangd only asks a
+     * compiler for its system include paths when --query-driver allows it.
+     * Without that clangd guesses them from the newest gcc installation,
+     * which may lack the C++ headers (e.g. 'cstdlib' file not found).
+     */
+    private List<String> compilerPaths() {
+        List<String> paths = new ArrayList<>();
+        try {
+            for (CompilerSet compilerSet : CompilerSetManager.get(env).getCompilerSets()) {
+                for (Tool tool : compilerSet.getTools()) {
+                    if (tool.getKind() == PredefinedToolKind.CCompiler
+                            || tool.getKind() == PredefinedToolKind.CCCompiler) {
+                        paths.add(tool.getPath());
+                    }
+                }
+            }
+        } catch (RuntimeException ex) {
+            LOG.log(Level.INFO, "Cannot list the compilers of " + env.getDisplayName(), ex); // NOI18N
+        }
+        return paths;
+    }
+
+    /**
+     * Builds clangd's --query-driver argument from compiler paths.
+     *
+     * @param compilerPaths The compiler paths, possibly with duplicates or
+     * empty entries.
+     * @return The argument, or null if there is no compiler path.
+     */
+    static String queryDriverArgument(Collection<String> compilerPaths) {
+        LinkedHashSet<String> drivers = new LinkedHashSet<>();
+        for (String path : compilerPaths) {
+            // the argument is a comma separated list of globs
+            if (path != null && !path.isEmpty() && path.indexOf(',') < 0) {
+                drivers.add(path);
+            }
+        }
+        if (drivers.isEmpty()) {
+            return null;
+        }
+        return "--query-driver=" + String.join(",", drivers); // NOI18N
     }
 
     public void start(ServerRestarter serverRestarter) throws IOException {
@@ -217,7 +288,8 @@ public final class ClangdProcess {
         } else {
             fireStateChange(LSPServerState.STOPPED);
         }
-        String[] commands = getCommands();
+        String[] commands = buildCommands(true);
+        startedCommands = commands;
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(commands);
             File logFile = options.getLogFile();
@@ -268,7 +340,8 @@ public final class ClangdProcess {
             throw new IOException("clangd not found on " + env.getDisplayName()); // NOI18N
         }
         fireStateChange(LSPServerState.STOPPED);
-        String[] commands = getCommands();
+        String[] commands = buildCommands(true);
+        startedCommands = commands;
         try {
             NativeProcess remote = NativeProcessBuilder.newProcessBuilder(env)
                     .setExecutable(commands[0])
@@ -362,12 +435,19 @@ public final class ClangdProcess {
         }
     }
 
+    /**
+     * Restarts clangd in the background: starting it asks the host for its
+     * compilers (and, for remote hosts, where clangd is), which must not
+     * happen on the EDT.
+     */
     public void restart() {
-        try {
-            start(this.serverRestarter);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+        RESTART_RP.post(() -> {
+            try {
+                start(this.serverRestarter);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        });
     }
 
 }
