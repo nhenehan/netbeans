@@ -206,10 +206,14 @@ public class MakeProjectGeneratorImpl extends ProjectGenerator {
         if (instance != null) {
             instance.setContext(project, projectDescriptor);
         }
-        mainFileParams.doPostProjectCreationWork();
-        instance = MakeTemplateListener.getInstance();
-        if (instance != null) {
-            instance.clearContext();
+        try {
+            mainFileParams.doPostProjectCreationWork();
+        } finally {
+            // a stale context would attribute later files to this project
+            instance = MakeTemplateListener.getInstance();
+            if (instance != null) {
+                instance.clearContext();
+            }
         }
         projectDescriptor.closed();
         projectDescriptor.clean();

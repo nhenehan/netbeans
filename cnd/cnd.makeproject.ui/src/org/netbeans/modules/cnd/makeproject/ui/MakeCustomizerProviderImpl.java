@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import org.netbeans.api.project.Project;
@@ -69,6 +71,8 @@ public class MakeCustomizerProviderImpl implements MakeCustomizerProvider, Custo
             ic.add(new MakeCustomizerProviderImpl(owner));
         }
     }
+
+    private static final Logger LOG = Logger.getLogger(MakeCustomizerProviderImpl.class.getName());
 
     private final MakeProject project;
     // Option indexes
@@ -112,6 +116,8 @@ public class MakeCustomizerProviderImpl implements MakeCustomizerProvider, Custo
     public void showCustomizer(final String preselectedNodeName, final List<Item> items, final List<Folder> folders) {
         if (!projectDescriptorProvider.gotDescriptor() || projectDescriptorProvider.getConfigurationDescriptor().getConfs().size() == 0) {
             //TODO: show warning dialog
+            LOG.log(Level.INFO, "Not showing the properties of {0}: its configurations are not loaded (descriptor loaded: {1})", // NOI18N
+                    new Object[]{project.getProjectDirectory(), projectDescriptorProvider.gotDescriptor()});
             return;
         }
         showCustomizerWorker(preselectedNodeName, items, folders);
