@@ -75,9 +75,10 @@ public class UnbufferSupport {
                 if (!hinfo.getCpuFamily().equals(CpuFamily.X86) && 
                         !hinfo.getCpuFamily().equals(CpuFamily.SPARC) &&
                         !hinfo.getCpuFamily().equals(CpuFamily.AARCH64) &&
-                        !hinfo.getCpuFamily().equals(CpuFamily.ARM)) {
-                    // Unbuffer is available for x86, sparc, aarch64 and
-                    // 32-bit arm (armv7) linux
+                        !hinfo.getCpuFamily().equals(CpuFamily.ARM) &&
+                        !hinfo.getCpuFamily().equals(CpuFamily.RISCV64)) {
+                    // Unbuffer is available for x86, sparc, aarch64, riscv64
+                    // and 32-bit arm (armv7) linux
                     return;
                 }
                 break;

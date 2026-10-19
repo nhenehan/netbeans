@@ -150,6 +150,7 @@ UNBUFFER_SO=/tmp/out/bin/nativeexecution/Linux-x86_64/unbuffer.so cargo test --t
 | `aarch64-unknown-linux-musl` | `Linux-aarch64` (no `_64`, see the `${_isa}` macro) |
 | `i686-unknown-linux-musl` | `Linux-x86`: 32-bit hosts, and 32-bit programs on x86_64 hosts (`unbuffer.so`) |
 | `armv7-unknown-linux-musleabihf` | `Linux-arm`: 32-bit ARM hosts with hard float, ARMv7 or later (BeagleBoard, Raspberry Pi 2 and later on a 32-bit OS); not ARMv6 or soft-float `armel` |
+| `riscv64gc-unknown-linux-musl` | `Linux-riscv64` (no `_64`, like aarch64); built with `+crt-static`, since this target links dynamically by default |
 
 They all link with `rust-lld`, and the executables are static, so they don't
 depend on the host's glibc version. Linux-sparc_64 was dropped (2026-10-18).

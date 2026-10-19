@@ -85,7 +85,7 @@ public final class HostInfoFactory {
         return info;
     }
     
-    private static CpuFamily toCpuFamily(String cpuFamilyStr) {
+    static CpuFamily toCpuFamily(String cpuFamilyStr) {
         try {
             return CpuFamily.valueOf(cpuFamilyStr.toUpperCase()); // NOI18N
         } catch (IllegalArgumentException ex) {

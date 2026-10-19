@@ -169,7 +169,8 @@ public final class PtySupport {
                     return hostInfo.getCpuFamily().equals(CpuFamily.X86) 
                             || hostInfo.getCpuFamily().equals(CpuFamily.SPARC)
                             || hostInfo.getCpuFamily().equals(CpuFamily.ARM)
-                            || hostInfo.getCpuFamily().equals(CpuFamily.AARCH64);
+                            || hostInfo.getCpuFamily().equals(CpuFamily.AARCH64)
+                            || hostInfo.getCpuFamily().equals(CpuFamily.RISCV64);
                 case SUNOS:
                     return true;
                 case FREEBSD:
