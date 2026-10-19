@@ -35,7 +35,8 @@ shift
 [ $# -gt 0 ] || set -- \
     x86_64-unknown-linux-musl:Linux-x86_64 \
     aarch64-unknown-linux-musl:Linux-aarch64 \
-    i686-unknown-linux-musl:Linux-x86
+    i686-unknown-linux-musl:Linux-x86 \
+    armv7-unknown-linux-musleabihf:Linux-arm
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here"

@@ -168,7 +168,7 @@ public final class PtySupport {
                 case LINUX:
                     return hostInfo.getCpuFamily().equals(CpuFamily.X86) 
                             || hostInfo.getCpuFamily().equals(CpuFamily.SPARC)
-                            || (hostInfo.getCpuFamily().equals(CpuFamily.ARM) && Boolean.getBoolean("cnd.pty.arm.support"))
+                            || hostInfo.getCpuFamily().equals(CpuFamily.ARM)
                             || hostInfo.getCpuFamily().equals(CpuFamily.AARCH64);
                 case SUNOS:
                     return true;

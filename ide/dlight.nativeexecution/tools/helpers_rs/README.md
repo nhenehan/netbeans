@@ -149,6 +149,12 @@ UNBUFFER_SO=/tmp/out/bin/nativeexecution/Linux-x86_64/unbuffer.so cargo test --t
 | `x86_64-unknown-linux-musl` | `Linux-x86_64` |
 | `aarch64-unknown-linux-musl` | `Linux-aarch64` (no `_64`, see the `${_isa}` macro) |
 | `i686-unknown-linux-musl` | `Linux-x86`: 32-bit hosts, and 32-bit programs on x86_64 hosts (`unbuffer.so`) |
+| `armv7-unknown-linux-musleabihf` | `Linux-arm`: 32-bit ARM hosts with hard float, ARMv7 or later (BeagleBoard, Raspberry Pi 2 and later on a 32-bit OS); not ARMv6 or soft-float `armel` |
 
 They all link with `rust-lld`, and the executables are static, so they don't
 depend on the host's glibc version. Linux-sparc_64 was dropped (2026-10-18).
+
+Testing a cross target on an x86_64 host works through qemu-user (binfmt), e.g.
+`CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=rust-lld cargo test --target armv7-unknown-linux-musleabihf`.
+qemu-user emulates a process's own `/proc/<pid>/stat` with most fields 0, so the
+`finds_own_session` unit test skips itself there.

@@ -273,6 +273,13 @@ mod tests {
     fn finds_own_session() {
         // SAFETY: getsid(0) only queries the calling process
         let sid = unsafe { libc::getsid(0) };
-        assert!(session_members(sid).contains(&(std::process::id() as i32)));
+        let me = std::process::id() as i32;
+        // qemu-user emulates a process's own /proc/<pid>/stat with session 0
+        let own = fs::read_to_string(format!("/proc/{me}/stat")).ok();
+        if sid != 0 && own.as_deref().and_then(stat_session) == Some(0) {
+            eprintln!("finds_own_session: skipped, /proc/{me}/stat is emulated (qemu-user)");
+            return;
+        }
+        assert!(session_members(sid).contains(&me));
     }
 }
