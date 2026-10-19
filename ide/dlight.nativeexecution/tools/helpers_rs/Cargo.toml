@@ -46,3 +46,9 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# unbuffer is a no_std cdylib built on its own by build-dist.sh; plain cargo
+# commands here (build, test) leave it out.
+[workspace]
+members = [".", "unbuffer"]
+default-members = ["."]

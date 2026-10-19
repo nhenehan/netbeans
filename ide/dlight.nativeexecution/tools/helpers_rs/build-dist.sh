@@ -22,6 +22,9 @@
 # Usage: build-dist.sh <outdir> [rust-target:platform-dir ...]
 # Targets that are not installed (rustup target list --installed) are skipped.
 # Linux only: other platforms keep the prebuilt binaries from external/.
+# unbuffer.so is a no_std cdylib that uses only the host program's libc, so it
+# is built from the same musl targets with crt-static off; it has no DT_NEEDED
+# and loads into glibc and musl programs alike.
 
 set -eu
 
@@ -48,7 +51,13 @@ for spec in "$@"; do
     # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc
     var=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_LINKER
     env "$var=rust-lld" cargo build --quiet --release --locked --target "$target" --bins
+    flags=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_RUSTFLAGS
+    env "$var=rust-lld" "$flags=-C target-feature=-crt-static" \
+        cargo build --quiet --release --locked --target "$target" -p unbuffer
     mkdir -p "$out/bin/nativeexecution/$platform"
+    cp "target/$target/release/libunbuffer.so" "$out/bin/nativeexecution/$platform/unbuffer.so"
+    chmod 755 "$out/bin/nativeexecution/$platform/unbuffer.so"
+    echo "nativeexecution helpers: $target -> $out/bin/nativeexecution/$platform/unbuffer.so"
     for h in $helpers; do
         cp "target/$target/release/$h" "$out/bin/nativeexecution/$platform/$h"
         chmod 755 "$out/bin/nativeexecution/$platform/$h"

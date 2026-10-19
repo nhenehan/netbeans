@@ -30,6 +30,7 @@ and so do the helpers that have not been ported yet.
 | `killall` | `tools/killall` | `signals/impl/NbKillAllSignalSupport` |
 | `pty_open` | `tools/pty_open.c` | `pty/PtyOpenUtility`, `pty/PtyAllocator` (the debugger's internal terminal) |
 | `pty` ("nbstart") | `tools/pty` | `pty/NbStartUtility`, `NbNativeProcess` (starts every process), host setup (`--dumpenv`) |
+| `unbuffer.so` (crate `unbuffer/`) | `tools/unbuffer` | `api/util/UnbufferSupport` (LD_PRELOAD for Output-window runs) |
 
 ## killall
 
@@ -115,6 +116,22 @@ Differences from the C tool, all fixes:
   lock instead of failing.
 - `wait` stops on ECHILD instead of looping.
 
+## unbuffer.so
+
+`UnbufferSupport` adds it to `LD_PRELOAD` (by bare name, found through
+`LD_LIBRARY_PATH`) for programs whose output goes to the Output window. Its
+`.init_array` constructor calls `setbuf(stdout, NULL)`, so output shows up as it is
+written instead of in 4 KB blocks.
+
+It is a separate workspace member: a `no_std` cdylib that uses only the host
+program's `setbuf` and `stdout`. It is built from the musl targets with
+`crt-static` off, comes out at about 2.5 KB, and has no `DT_NEEDED` entry, so the
+same file loads into glibc and musl (Alpine) programs. The C build needed glibc's
+`libc.so.6`. Plain `cargo build`/`cargo test` here leave it out, and
+`build-dist.sh` builds it. `tests/unbuffer.rs` preloads it into GNU sed on a pipe
+when `UNBUFFER_SO` points at a build, and checks a C build the same way with
+`UNBUFFER_C`.
+
 ## Build
 
 ```sh
@@ -122,7 +139,8 @@ cargo test
 KILLALL_C=/path/to/c/killall PTY_OPEN_C=/path/to/c/pty_open PTY_C=/path/to/c/pty cargo test   # also compare with the C tools
 
 # static musl binaries in the IDE layout (skips targets that aren't installed)
-./build-dist.sh /tmp/out    # -> /tmp/out/bin/nativeexecution/Linux-x86_64/{killall,pty_open,pty}, ...
+./build-dist.sh /tmp/out    # -> /tmp/out/bin/nativeexecution/Linux-x86_64/{killall,pty_open,pty,unbuffer.so}, ...
+UNBUFFER_SO=/tmp/out/bin/nativeexecution/Linux-x86_64/unbuffer.so cargo test --test unbuffer
 ```
 
 `ant build` runs `build-dist.sh` (see `../../build.xml`). The default targets are
