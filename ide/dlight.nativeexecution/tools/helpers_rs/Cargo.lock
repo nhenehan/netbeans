@@ -14,3 +14,7 @@ version = "1.0.0"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "unbuffer"
+version = "1.0.0"
