@@ -35,7 +35,9 @@ shift
 [ $# -gt 0 ] || set -- \
     x86_64-unknown-linux-musl:Linux-x86_64 \
     aarch64-unknown-linux-musl:Linux-aarch64 \
-    i686-unknown-linux-musl:Linux-x86
+    i686-unknown-linux-musl:Linux-x86 \
+    armv7-unknown-linux-musleabihf:Linux-arm \
+    riscv64gc-unknown-linux-musl:Linux-riscv64
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here"
@@ -49,10 +51,12 @@ for spec in "$@"; do
         echo "nativeexecution helpers: skipping $target (not installed; rustup target add $target)" >&2
         continue
     fi
-    # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc
+    # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc;
+    # +crt-static because some musl targets (riscv64gc) default to dynamic linking
     var=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_LINKER
-    env "$var=rust-lld" cargo build --quiet --release --locked --target "$target" --bins
     flags=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_RUSTFLAGS
+    env "$var=rust-lld" "$flags=-C target-feature=+crt-static" \
+        cargo build --quiet --release --locked --target "$target" --bins
     env "$var=rust-lld" "$flags=-C target-feature=-crt-static" \
         cargo build --quiet --release --locked --target "$target" -p unbuffer
     mkdir -p "$out/bin/nativeexecution/$platform"

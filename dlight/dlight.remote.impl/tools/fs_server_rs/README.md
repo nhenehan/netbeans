@@ -53,6 +53,7 @@ The default targets are:
 | `x86_64-unknown-linux-musl` | `Linux-x86_64` |
 | `aarch64-unknown-linux-musl` | `Linux-aarch64` |
 | `armv7-unknown-linux-musleabihf` | `Linux-arm` |
+| `riscv64gc-unknown-linux-musl` | `Linux-riscv64` (no `_64`, like aarch64) |
 | `x86_64-apple-darwin` | `MacOSX-x86` |
 | `aarch64-apple-darwin` | `MacOSX-arm` (Apple silicon reports its CPU family as `arm`) |
 
@@ -67,7 +68,8 @@ To install all targets:
 
 ```sh
 rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl \
-    armv7-unknown-linux-musleabihf x86_64-apple-darwin aarch64-apple-darwin
+    armv7-unknown-linux-musleabihf riscv64gc-unknown-linux-musl \
+    x86_64-apple-darwin aarch64-apple-darwin
 cargo install cargo-zigbuild    # plus zig on the PATH
 ```
 

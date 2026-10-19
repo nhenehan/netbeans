@@ -26,19 +26,19 @@
     <!--
         fs_server, the remote file system helper the IDE uploads to remote hosts, is the
         Rust implementation in tools/fs_server_rs, built from source here for
-        Linux x86_64/aarch64/arm and macOS x86/arm (see tools/fs_server_rs/README.md).
+        Linux x86_64/aarch64/arm/riscv64 and macOS x86/arm (see tools/fs_server_rs/README.md).
         Needs cargo and rustup; the Linux targets link with rust-lld, macOS ones with
         cargo-zigbuild. Targets that are not installed are skipped with a warning, only
         Linux-x86_64 is required. Hosts without a matching binary use plain SFTP.
     -->
     <property name="extra.module.files"
-              value="bin/Linux-x86_64/fs_server,bin/Linux-aarch64/fs_server,bin/Linux-arm/fs_server,bin/MacOSX-x86/fs_server,bin/MacOSX-arm/fs_server"/>
+              value="bin/Linux-x86_64/fs_server,bin/Linux-aarch64/fs_server,bin/Linux-arm/fs_server,bin/Linux-riscv64/fs_server,bin/MacOSX-x86/fs_server,bin/MacOSX-arm/fs_server"/>
 
     <target name="-fs-server-check">
         <exec executable="cargo" failifexecutionfails="false" resultproperty="fs_server.cargo.rc" outputproperty="fs_server.cargo.version">
             <arg value="--version"/>
         </exec>
-        <fail message="Building fs_server needs Rust: install rustup and cargo, then 'rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf' (macOS hosts also: 'rustup target add x86_64-apple-darwin aarch64-apple-darwin' and 'cargo install cargo-zigbuild' with zig on the PATH)">
+        <fail message="Building fs_server needs Rust: install rustup and cargo, then 'rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf riscv64gc-unknown-linux-musl' (macOS hosts also: 'rustup target add x86_64-apple-darwin aarch64-apple-darwin' and 'cargo install cargo-zigbuild' with zig on the PATH)">
             <condition>
                 <not>
                     <equals arg1="${fs_server.cargo.rc}" arg2="0"/>

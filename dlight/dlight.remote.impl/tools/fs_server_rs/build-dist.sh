@@ -23,7 +23,7 @@
 # Targets that are not installed (rustup target list --installed) are skipped.
 # macOS targets are linked with cargo-zigbuild (cargo install cargo-zigbuild,
 # plus zig on the PATH) and skipped without it. The platform directories follow
-# FSSDispatcher: Linux gets ${_isa} ("_64", but not for aarch64), macOS does not,
+# FSSDispatcher: Linux gets ${_isa} ("_64", but not for aarch64 or riscv64), macOS does not,
 # and Apple silicon reports its CPU family as "arm".
 
 set -eu
@@ -34,6 +34,7 @@ shift
     x86_64-unknown-linux-musl:Linux-x86_64 \
     aarch64-unknown-linux-musl:Linux-aarch64 \
     armv7-unknown-linux-musleabihf:Linux-arm \
+    riscv64gc-unknown-linux-musl:Linux-riscv64 \
     x86_64-apple-darwin:MacOSX-x86 \
     aarch64-apple-darwin:MacOSX-arm
 
@@ -64,8 +65,11 @@ for spec in "$@"; do
         ;;
     *)
         # musl targets ship a self-contained libc.a, so rust-lld links them without a cross gcc
+        # +crt-static because some musl targets (riscv64gc) default to dynamic linking
         var=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_LINKER
-        env "$var=rust-lld" cargo build --quiet --release --locked --target "$target"
+        flags=CARGO_TARGET_$(printf '%s' "$target" | tr 'a-z-' 'A-Z_')_RUSTFLAGS
+        env "$var=rust-lld" "$flags=-C target-feature=+crt-static" \
+            cargo build --quiet --release --locked --target "$target"
         ;;
     esac
     mkdir -p "$out/bin/$platform"

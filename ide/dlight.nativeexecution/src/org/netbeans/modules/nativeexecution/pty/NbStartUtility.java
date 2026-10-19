@@ -51,9 +51,10 @@ public class NbStartUtility extends HelperUtility {
         String osname = hostInfo.getOS().getFamily().cname();
         String platform = hostInfo.getCpuFamily().name().toLowerCase();
         // the same rule as the ${_isa} macro (MacroExpanderFactory): no "_64" for
-        // aarch64, whose directory is Linux-aarch64
+        // aarch64 and riscv64, whose directories are Linux-aarch64 and Linux-riscv64
         String bitness = hostInfo.getOS().getBitness() == HostInfo.Bitness._64
-                && hostInfo.getCpuFamily() != HostInfo.CpuFamily.AARCH64 ? "_64" : ""; // NOI18N
+                && hostInfo.getCpuFamily() != HostInfo.CpuFamily.AARCH64
+                && hostInfo.getCpuFamily() != HostInfo.CpuFamily.RISCV64 ? "_64" : ""; // NOI18N
 
         // This method is called while HostInfo initialization so we cannot
         // use MacroExpander here (the same is for parent methods)

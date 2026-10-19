@@ -29,6 +29,8 @@ public interface HostInfo {
         X86,
         ARM,
         AARCH64,
+        /** 64-bit RISC-V ({@code uname -m} = riscv64). @since 1.74 */
+        RISCV64,
         UNKNOWN;
     }
 
