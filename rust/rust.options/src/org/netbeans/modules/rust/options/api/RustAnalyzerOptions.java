@@ -19,6 +19,7 @@
 package org.netbeans.modules.rust.options.api;
 
 import java.nio.file.Path;
+import javax.swing.event.ChangeListener;
 import org.netbeans.modules.rust.options.impl.RustAnalyzerOptionsImpl;
 
 /**
@@ -38,6 +39,27 @@ public final class RustAnalyzerOptions {
      */
     public static final Path getRustAnalyzerLocation(boolean verifying, boolean showNotificationIfVerifyFail) {
         return RustAnalyzerOptionsImpl.getRustAnalyzerLocation(verifying, true);
+    }
+
+    /**
+     * Adds a listener notified when the rust-analyzer location is set or
+     * removed. Notifications may arrive on any thread.
+     *
+     * @param listener The listener to add.
+     * @since 1.12
+     */
+    public static void addChangeListener(ChangeListener listener) {
+        RustAnalyzerOptionsImpl.addChangeListener(listener);
+    }
+
+    /**
+     * Removes a listener added by {@link #addChangeListener(ChangeListener)}.
+     *
+     * @param listener The listener to remove.
+     * @since 1.12
+     */
+    public static void removeChangeListener(ChangeListener listener) {
+        RustAnalyzerOptionsImpl.removeChangeListener(listener);
     }
 
     /**

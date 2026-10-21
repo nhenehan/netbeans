@@ -25,9 +25,11 @@ import java.nio.file.Paths;
 import java.util.prefs.Preferences;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeListener;
 import org.netbeans.api.options.OptionsDisplayer;
 import org.netbeans.modules.rust.project.api.RustProjectAPI;
 import org.openide.awt.NotificationDisplayer;
+import org.openide.util.ChangeSupport;
 import org.openide.util.ImageUtilities;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
@@ -39,8 +41,26 @@ public final class RustAnalyzerOptionsImpl {
 
     private static final String RUST_ANALYZER_LOCATION_KEY = "rust-analyzer-location"; // NOI18N
 
+    private static final ChangeSupport CHANGE_SUPPORT = new ChangeSupport(RustAnalyzerOptionsImpl.class);
+
+    static {
+        getPreferences().addPreferenceChangeListener(evt -> {
+            if (RUST_ANALYZER_LOCATION_KEY.equals(evt.getKey())) {
+                CHANGE_SUPPORT.fireChange();
+            }
+        });
+    }
+
     private static Preferences getPreferences() {
         return NbPreferences.forModule(RustAnalyzerOptionsImpl.class);
+    }
+
+    public static void addChangeListener(ChangeListener listener) {
+        CHANGE_SUPPORT.addChangeListener(listener);
+    }
+
+    public static void removeChangeListener(ChangeListener listener) {
+        CHANGE_SUPPORT.removeChangeListener(listener);
     }
 
     /**
