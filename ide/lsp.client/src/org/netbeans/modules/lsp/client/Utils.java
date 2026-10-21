@@ -58,7 +58,9 @@ import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.netbeans.api.annotations.common.NonNull;
 import org.netbeans.api.editor.document.LineDocument;
 import org.netbeans.api.editor.document.LineDocumentUtils;
@@ -413,6 +415,22 @@ public class Utils {
         }
     }
 
+    /**
+     * Whether the server answered that the request was cancelled or that the
+     * document changed while it was computed. Per the LSP specification these
+     * are not failures: the client just asks again later.
+     */
+    static boolean isStaleResult(Throwable ex) {
+        Throwable cause = ex instanceof ExecutionException ? ex.getCause() : ex;
+        if (!(cause instanceof ResponseErrorException responseError)) {
+            return false;
+        }
+        int code = responseError.getResponseError().getCode();
+        return code == ResponseErrorCode.ContentModified.getValue()
+                || code == ResponseErrorCode.RequestCancelled.getValue()
+                || code == ResponseErrorCode.ServerCancelled.getValue();
+    }
+
     public interface CreateParameters<P> {
         public P createParameters() throws BadLocationException;
     }
@@ -428,7 +446,11 @@ public class Utils {
                 handleException(ex);
             }
             @Override public void handleException(Exception ex) {
-                Exceptions.printStackTrace(ex);
+                if (isStaleResult(ex)) {
+                    LOG.log(Level.FINE, null, ex);
+                } else {
+                    Exceptions.printStackTrace(ex);
+                }
             }
         };
 

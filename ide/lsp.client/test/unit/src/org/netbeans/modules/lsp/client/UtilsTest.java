@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import javax.swing.text.Document;
 import javax.swing.text.StyledDocument;
 import org.eclipse.lsp4j.CreateFile;
@@ -35,7 +36,10 @@ import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.netbeans.api.editor.mimelookup.MimePath;
 import org.netbeans.junit.NbTestCase;
 import org.netbeans.modules.editor.plain.PlainKit;
@@ -218,6 +222,19 @@ public class UtilsTest extends NbTestCase {
         assertEquals(expectedResult, doc.getText(0, doc.getLength()));
         assertEquals(expectedPos, caret.getOffset());
         LifecycleManager.getDefault().saveAll();
+    }
+
+    public void testIsStaleResult() {
+        assertTrue(Utils.isStaleResult(responseError(ResponseErrorCode.ContentModified)));
+        assertTrue(Utils.isStaleResult(responseError(ResponseErrorCode.RequestCancelled)));
+        assertTrue(Utils.isStaleResult(responseError(ResponseErrorCode.ServerCancelled)));
+        assertFalse(Utils.isStaleResult(responseError(ResponseErrorCode.InternalError)));
+        assertFalse(Utils.isStaleResult(new ExecutionException(new IllegalStateException())));
+        assertFalse(Utils.isStaleResult(new IllegalStateException()));
+    }
+
+    private static ExecutionException responseError(ResponseErrorCode code) {
+        return new ExecutionException(new ResponseErrorException(new ResponseError(code, "", null)));
     }
 
     public void testRemovedTestPosition() throws Exception {
