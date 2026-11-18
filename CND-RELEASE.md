@@ -156,6 +156,9 @@ carry over. The first start takes longer while the new modules are registered.
 Unzip the `-windows-x64.zip` anywhere and run `netbeans\bin\netbeans64.exe`.
 For an installer with Start menu entries and an uninstaller, see below.
 
+To build C/C++ projects in WSL2 distributions (one or several), see
+[CND-WSL2.md](CND-WSL2.md).
+
 ## Rust: rust-analyzer
 
 Code completion, navigation and diagnostics for Rust come from rust-analyzer:
