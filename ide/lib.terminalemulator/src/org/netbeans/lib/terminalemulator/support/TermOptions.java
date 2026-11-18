@@ -267,6 +267,15 @@ public final class TermOptions {
 	    font = new Font("Monospaced", fontStyle, fontSize);// NOI18N
     }
 
+    private static void storeColor(Preferences prefs, String prop,
+                                   Color color, Color defaultColor) {
+        if (defaultColor != null && color.getRGB() == defaultColor.getRGB()) {
+            prefs.remove(PREFIX + prop);
+        } else {
+            prefs.putInt(PREFIX + prop, color.getRGB());
+        }
+    }
+
     public void storeTo(Preferences prefs) {
         if (prefs == null)
             return;
@@ -275,10 +284,14 @@ public final class TermOptions {
 	prefs.putInt(PREFIX + PROP_FONT_SIZE, fontSize);
 	prefs.putInt(PREFIX + PROP_TAB_SIZE, tabSize);
 	prefs.putInt(PREFIX + PROP_HISTORY_SIZE, historySize);
-	prefs.putInt(PREFIX + PROP_FOREGROUND, foreground.getRGB());
-	prefs.putInt(PREFIX + PROP_BACKGROUND, background.getRGB());
-	prefs.putInt(PREFIX + PROP_SELECTION_BACKGROUND,
-		     selectionBackground.getRGB());
+        // Colors that equal the look and feel's default are not stored, so
+        // the terminal follows the theme (FlatLaf Light -> Dark) instead of
+        // keeping the colors of whatever theme was active when the options
+        // were last applied.
+        storeColor(prefs, PROP_FOREGROUND, foreground, foregroundDefault);
+        storeColor(prefs, PROP_BACKGROUND, background, backgroundDefault);
+        storeColor(prefs, PROP_SELECTION_BACKGROUND, selectionBackground,
+                   selectionBackgroundDefault);
         prefs.put(PREFIX + PROP_SELECT_BY_WORD_DELIMITERS, selectByWordDelimiters);
 	prefs.putBoolean(PREFIX + PROP_CLICK_TO_TYPE, clickToType);
 	prefs.putBoolean(PREFIX + PROP_SCROLL_ON_INPUT, scrollOnInput);
