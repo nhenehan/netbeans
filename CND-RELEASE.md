@@ -136,6 +136,22 @@ ant -f ide/lsp.client/build.xml netbeans          # the changed module
 nbbuild/cnd-release/build-all-releases.sh --skip-build --fetch-jdk 25
 ```
 
+## Downloads from GitHub
+
+`.github/workflows/cnd-release.yml` runs the build below on a GitHub runner
+(about 1–2 hours). It publishes the Linux `.tar.gz`, the Windows `.zip` and the
+NSIS installer `.exe`, each with a bundled JDK and a `.sha256`:
+
+| Trigger | Where the files appear |
+|---|---|
+| push a tag `cnd-*`, e.g. `git tag cnd-2026.11.19 && git push origin cnd-2026.11.19` | a GitHub Release named after the tag |
+| push to `cnd-stable` | the pre-release **cnd-stable-latest**, replaced on every push |
+| Actions > CND release build > Run workflow, on any branch | workflow artifacts, kept 7 days |
+
+The usual flow: work and upstream merges go to `cnd-develop`. When it is
+verified, fast-forward `cnd-stable` to it and push; that publishes
+cnd-stable-latest. Tag a commit to keep a build permanently.
+
 ## Install
 
 ### Linux

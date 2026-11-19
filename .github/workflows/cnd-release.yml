@@ -1,0 +1,144 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Builds the unofficial CND + Java + Web + Rust IDE (see CND-RELEASE.md):
+# the Linux x64 .tar.gz, the Windows x64 .zip and the NSIS installer .exe,
+# each with a bundled Temurin JDK and a .sha256.
+#
+#   tag cnd-*             -> GitHub Release named after the tag
+#   push to cnd-stable    -> pre-release "cnd-stable-latest", replaced on every push
+#   Run workflow (manual) -> workflow artifacts only, kept 7 days
+#
+# Never runs in apache/netbeans.
+
+name: CND release build
+
+on:
+  push:
+    tags:
+      - 'cnd-*'
+      - '!cnd-stable-latest'
+    branches:
+      - 'cnd-stable'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cnd-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JDK_VERSION: 25
+  ZIG_VERSION: 0.13.0
+
+jobs:
+  release:
+    name: Build installers
+    if: github.repository_owner != 'apache'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK ${{ env.JDK_VERSION }} (runs ant)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JDK_VERSION }}
+
+      - name: Rust targets for the remote-host helpers
+        run: |
+          rustup update stable --no-self-update
+          rustup default stable
+          rustup target add \
+              x86_64-unknown-linux-musl aarch64-unknown-linux-musl \
+              i686-unknown-linux-musl armv7-unknown-linux-musleabihf \
+              riscv64gc-unknown-linux-musl \
+              x86_64-apple-darwin aarch64-apple-darwin
+
+      # fs_server for macOS hosts links with cargo-zigbuild (dlight.remote.impl)
+      - name: Zig and cargo-zigbuild
+        run: |
+          curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz" \
+              | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/zig-linux-x86_64-${ZIG_VERSION}" >> "$GITHUB_PATH"
+          cargo install cargo-zigbuild --locked
+
+      - name: Packaging tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ant nsis zip unzip jq
+
+      - name: Build the IDE and package Linux and Windows
+        run: nbbuild/cnd-release/build-all-releases.sh --fetch-jdk "$JDK_VERSION"
+
+      - name: Windows installer (NSIS)
+        working-directory: nbbuild/dist
+        run: |
+          ZIP=$(ls netbeans-cnd-*-windows-x64.zip)
+          REL=${ZIP%-windows-x64.zip}
+          VERSION=$(echo "$REL" | sed -E 's/.*-([0-9]{4})([0-9]{2})([0-9]{2})-.*/\1.\2.\3/')
+          rm -rf nsis-stage && mkdir nsis-stage
+          unzip -q "$ZIP" -d nsis-stage
+          du -sk nsis-stage/netbeans | cut -f1 > nsis-stage/size-kb.txt
+          cp ../cnd-release/netbeans-installer.nsi nsis-stage/
+          (cd nsis-stage && makensis -V2 -DSRC=netbeans -DVERSION="$VERSION" \
+              -DOUTFILE="$REL-windows-x64.exe" netbeans-installer.nsi)
+          mv "nsis-stage/$REL-windows-x64.exe" .
+          sha256sum "$REL-windows-x64.exe" > "$REL-windows-x64.exe.sha256"
+          rm -rf nsis-stage
+          sha256sum -c netbeans-cnd-*.sha256
+          ls -lh netbeans-cnd-*
+
+      - name: Upload workflow artifacts (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cnd-installers
+          path: |
+            nbbuild/dist/netbeans-cnd-*.tar.gz*
+            nbbuild/dist/netbeans-cnd-*.zip*
+            nbbuild/dist/netbeans-cnd-*.exe*
+          retention-days: 7
+          compression-level: 0
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: nbbuild/dist
+        run: |
+          files=(netbeans-cnd-*.tar.gz* netbeans-cnd-*.zip* netbeans-cnd-*.exe*)
+          notes="Unofficial build from a git checkout of ${GITHUB_REF_NAME} at ${GITHUB_SHA::10}; not an Apache NetBeans release. See CND-RELEASE.md."
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+              gh release create "$GITHUB_REF_NAME" "${files[@]}" \
+                  --title "$GITHUB_REF_NAME" --notes "$notes" --verify-tag
+          else
+              tag=cnd-stable-latest
+              gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+              gh release create "$tag" "${files[@]}" --prerelease \
+                  --target "$GITHUB_SHA" --title "cnd-stable (latest build)" --notes "$notes"
+          fi
