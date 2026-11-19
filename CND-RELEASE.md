@@ -146,7 +146,7 @@ NSIS installer `.exe`, each with a bundled JDK and a `.sha256`:
 |---|---|
 | push a tag `cnd-*`, e.g. `git tag cnd-2026.11.19 && git push origin cnd-2026.11.19` | a GitHub Release named after the tag |
 | push to `cnd-stable` | the pre-release **cnd-stable-latest**, replaced on every push |
-| Actions > CND release build > Run workflow, on any branch | workflow artifacts, kept 7 days |
+| Actions > CND release build > Run workflow (only listed when the workflow file is on the default branch) | workflow artifacts, kept 7 days |
 
 The usual flow: work and upstream merges go to `cnd-develop`. When it is
 verified, fast-forward `cnd-stable` to it and push; that publishes

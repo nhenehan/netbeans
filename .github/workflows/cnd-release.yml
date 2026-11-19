@@ -21,7 +21,8 @@
 #
 #   tag cnd-*             -> GitHub Release named after the tag
 #   push to cnd-stable    -> pre-release "cnd-stable-latest", replaced on every push
-#   Run workflow (manual) -> workflow artifacts only, kept 7 days
+#   Run workflow (manual) -> workflow artifacts only, kept 7 days; GitHub lists
+#                            it only when this file is on the default branch
 #
 # Never runs in apache/netbeans.
 
