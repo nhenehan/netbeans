@@ -89,9 +89,18 @@ jobs:
           cargo install cargo-zigbuild --locked
 
       - name: Packaging tools
+        # Ubuntu mirrors (security.ubuntu.com especially) return transient 503s;
+        # retry each fetch and re-run update+install a few times before failing.
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ant nsis zip unzip jq
+          APT="sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30"
+          for attempt in 1 2 3; do
+            if $APT update -qq && $APT install -y -qq --fix-missing ant nsis zip unzip jq; then
+              exit 0
+            fi
+            echo "::warning::apt attempt $attempt failed; retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       - name: Build the IDE and package Linux and Windows
         run: nbbuild/cnd-release/build-all-releases.sh --fetch-jdk "$JDK_VERSION"
