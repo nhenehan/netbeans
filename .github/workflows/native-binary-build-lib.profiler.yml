@@ -160,8 +160,20 @@ jobs:
            # Since we are on 64-bit system it means we do not by default have support
            # for creating 32-bit binaries, however this support comes if we install
            # the 'gcc-multilib' package for GNU C/C++.
-           sudo apt-get update
-           sudo apt-get install gcc-multilib
+           # Ubuntu mirrors return transient 503s; retry each fetch and
+           # re-run update+install a few times before failing.
+           APT="sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30"
+           for attempt in 1 2 3; do
+             if $APT update && $APT install -y --fix-missing gcc-multilib; then
+               break
+             fi
+             if [ "$attempt" -eq 3 ]; then
+               echo "::error::apt failed after $attempt attempts"
+               exit 1
+             fi
+             echo "::warning::apt attempt $attempt failed; retrying in $((attempt * 20))s"
+             sleep $((attempt * 20))
+           done
            rm -f ../../release/lib/deployed/jdk16/linux/*
            bash -e -x ./buildnative-linux.sh
            ls -l -R ../../release/lib/deployed/jdk16/linux
