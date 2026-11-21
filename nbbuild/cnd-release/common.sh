@@ -97,6 +97,30 @@ check_tools() {
     [ -z "$missing" ] || log "warning: Rust targets not installed, their remote helpers will be missing:$missing"
 }
 
+# ant_retry_downloads CMD...: runs an ant command, and runs it again (up to
+# ANT_DOWNLOAD_ATTEMPTS times, default 3) only when it failed because the
+# external binaries could not be downloaded, as when Maven Central has a
+# transient outage. Jars that did download stay in */external and the
+# binaries cache, and the build is incremental, so a retry resumes. Any other
+# failure stops at once.
+ant_retry_downloads() {
+    local attempts=${ANT_DOWNLOAD_ATTEMPTS:-3} attempt out status
+    out=$(mktemp)
+    for ((attempt = 1; ; attempt++)); do
+        status=0
+        "$@" 2>&1 | tee "$out" || status=$?
+        [ "$status" = 0 ] && break
+        if [ "$attempt" -ge "$attempts" ] ||
+           ! grep -q 'Failed to download binaries' "$out"; then
+            rm -f "$out"
+            return "$status"
+        fi
+        log "external binaries failed to download (attempt $attempt of $attempts); retrying in $((attempt * 30))s"
+        sleep $((attempt * 30))
+    done
+    rm -f "$out"
+}
+
 # Builds the IDE once (unless --skip-build) and zips it the way nbbuild's
 # zip-cluster-config does, which applies the executable bits and leaves out
 # the build's bookkeeping files.
@@ -117,7 +141,7 @@ build_ide() {
         done
     else
         log "ant build-nozip (clusters: $cluster_list)"
-        "${ant[@]}" build-nozip
+        ant_retry_downloads "${ant[@]}" build-nozip
     fi
     [ -f "$nbbuild/netbeans/ide/bin/nativeexecution/Linux-x86_64/pty" ] ||
         die "the Rust nativeexecution helpers are missing from the build"
